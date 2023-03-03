@@ -24,6 +24,9 @@ type Game struct {
 	debug         bool
 	myBoard       *board
 	opponentBoard *board
+
+	hoverOnCell bool
+	hoverCell   point[int]
 }
 
 func NewGame() (*Game, error) {
@@ -57,8 +60,8 @@ func NewGame() (*Game, error) {
 
 	return &Game{
 		debug:         true,
-		myBoard:       newBoard(newPoint(48, 48), boardFace),
-		opponentBoard: newBoard(newPoint(48+400, 48), boardFace),
+		myBoard:       newBoard(newPoint[float32](48, 48), boardFace),
+		opponentBoard: newBoard(newPoint[float32](48+400, 48), boardFace),
 	}, nil
 }
 
@@ -78,11 +81,9 @@ func (g *Game) Update() error {
 	cx, cy := ebiten.CursorPosition()
 	cp := newPoint(float32(cx), float32(cy))
 
-	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-		x, y, ok := g.opponentBoard.cellOn(cp)
-		if ok {
-			_ = g.opponentBoard.shoot(x, y)
-		}
+	g.hoverCell.x, g.hoverCell.y, g.hoverOnCell = g.opponentBoard.cellOn(cp)
+	if g.hoverOnCell && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		_ = g.opponentBoard.shoot(g.hoverCell.x, g.hoverCell.y)
 	}
 
 	return nil
@@ -104,6 +105,16 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	g.myBoard.draw(screen)
 	g.opponentBoard.draw(screen)
+
+	if g.hoverOnCell {
+		pos := g.opponentBoard.cellPos(g.hoverCell.x+1, g.hoverCell.y+1)
+		vector.StrokeRect(screen, pos.x, pos.y, cellSize, cellSize, 4, color.RGBA{
+			R: 236, // 149,
+			G: 168, // 189,
+			B: 105, // 255,
+			A: 255,
+		})
+	}
 }
 
 func (g *Game) Layout(_, _ int) (int, int) {

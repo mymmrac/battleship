@@ -23,12 +23,12 @@ const (
 )
 
 type board struct {
-	pos      point
+	pos      point[float32]
 	cells    [10][10]cellKind
 	fontFace font.Face
 }
 
-func newBoard(pos point, fontFace font.Face) *board {
+func newBoard(pos point[float32], fontFace font.Face) *board {
 	c := [cellsCount][cellsCount]cellKind{}
 
 	c[1][1] = cellShip
@@ -73,17 +73,18 @@ func (b *board) draw(screen *ebiten.Image) {
 
 			var cellText string
 			if x >= 1 && y == 0 {
-				cellText = strconv.Itoa(x)
+				cellText = string(rune('A' + x - 1))
 			} else if x == 0 && y >= 1 {
-				cellText = string(rune('A' + y - 1))
+				cellText = strconv.Itoa(y)
 			}
 
+			pos = b.cellPos(x, y)
 			DrawCenteredText(
 				screen,
 				b.fontFace,
 				cellText,
-				int(b.pos.x+float32(x)*cellSize+cellSize/2),
-				int(b.pos.y+float32(y)*cellSize+cellSize/2),
+				int(pos.x+cellSize/2),
+				int(pos.y+cellSize/2),
 				color.Black,
 			)
 		}
@@ -136,7 +137,7 @@ func (b *board) draw(screen *ebiten.Image) {
 	}
 }
 
-func (b *board) innerCellPos(x, y int) point {
+func (b *board) innerCellPos(x, y int) point[float32] {
 	return newPoint(
 		b.pos.x+float32(x)*cellSize+cellPaddingSize/2,
 		b.pos.y+float32(y)*cellSize+cellPaddingSize/2,
@@ -147,7 +148,14 @@ func (b *board) innerCellSize() float32 {
 	return cellSize - cellPaddingSize
 }
 
-func (b *board) cellOn(p point) (int, int, bool) {
+func (b *board) cellPos(x, y int) point[float32] {
+	return newPoint(
+		b.pos.x+float32(x)*cellSize,
+		b.pos.y+float32(y)*cellSize,
+	)
+}
+
+func (b *board) cellOn(p point[float32]) (int, int, bool) {
 	p = p.sub(b.pos.add(newPoint(cellSize, cellSize)))
 
 	for y := 0; y < cellsCount; y++ {
