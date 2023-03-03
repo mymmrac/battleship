@@ -70,6 +70,15 @@ func (b *board) draw(screen *ebiten.Image) {
 				b.innerCellSize(),
 				color.Gray16{Y: 0xaaff},
 			)
+		}
+	}
+
+	// Outer cells text
+	for y := 0; y < cellsCount+1; y++ {
+		for x := 0; x < cellsCount+1; x++ {
+			if x != 0 && y != 0 {
+				continue
+			}
 
 			var cellText string
 			if x >= 1 && y == 0 {
@@ -78,7 +87,7 @@ func (b *board) draw(screen *ebiten.Image) {
 				cellText = strconv.Itoa(y)
 			}
 
-			pos = b.cellPos(x, y)
+			pos := b.cellPos(x, y)
 			DrawCenteredText(
 				screen,
 				b.fontFace,

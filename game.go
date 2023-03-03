@@ -59,7 +59,7 @@ func NewGame() (*Game, error) {
 	}
 
 	return &Game{
-		debug:         true,
+		debug:         false,
 		myBoard:       newBoard(newPoint[float32](48, 48), boardFace),
 		opponentBoard: newBoard(newPoint[float32](48+400, 48), boardFace),
 	}, nil
