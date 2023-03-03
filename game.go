@@ -9,11 +9,15 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/opentype"
 )
 
 const (
 	baseWindowWidth  = 1080
 	baseWindowHeight = 720
+
+	dpi = 72
 )
 
 type Game struct {
@@ -22,7 +26,7 @@ type Game struct {
 	opponentBoard *board
 }
 
-func NewGame() *Game {
+func NewGame() (*Game, error) {
 	ebiten.SetWindowTitle("Battleship")
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 
@@ -37,11 +41,25 @@ func NewGame() *Game {
 		int(math.Ceil((float64(screenHeight)-windowHeight)/2.0)),
 	)
 
+	boardFont, err := LoadFont("JetBrainsMono-Regular.ttf")
+	if err != nil {
+		return nil, fmt.Errorf("load font: %w", err)
+	}
+
+	boardFace, err := opentype.NewFace(boardFont, &opentype.FaceOptions{
+		Size:    float64(cellSize) * 0.6,
+		DPI:     dpi,
+		Hinting: font.HintingFull,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("create font face: %w", err)
+	}
+
 	return &Game{
 		debug:         true,
-		myBoard:       newBoard(newPoint(48, 48)),
-		opponentBoard: newBoard(newPoint(48+400, 48)),
-	}
+		myBoard:       newBoard(newPoint(48, 48), boardFace),
+		opponentBoard: newBoard(newPoint(48+400, 48), boardFace),
+	}, nil
 }
 
 func (g *Game) Update() error {

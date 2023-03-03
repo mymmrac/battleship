@@ -2,9 +2,11 @@ package main
 
 import (
 	"image/color"
+	"strconv"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
+	"golang.org/x/image/font"
 )
 
 const cellsCount = 10
@@ -21,11 +23,12 @@ const (
 )
 
 type board struct {
-	pos   point
-	cells [10][10]cellKind
+	pos      point
+	cells    [10][10]cellKind
+	fontFace font.Face
 }
 
-func newBoard(pos point) *board {
+func newBoard(pos point, fontFace font.Face) *board {
 	c := [cellsCount][cellsCount]cellKind{}
 
 	c[1][1] = cellShip
@@ -33,8 +36,9 @@ func newBoard(pos point) *board {
 	c[1][5] = cellShipHit
 
 	return &board{
-		pos:   pos,
-		cells: c,
+		pos:      pos,
+		cells:    c,
+		fontFace: fontFace,
 	}
 }
 
@@ -65,6 +69,22 @@ func (b *board) draw(screen *ebiten.Image) {
 				b.innerCellSize(),
 				b.innerCellSize(),
 				color.Gray16{Y: 0xaaff},
+			)
+
+			var cellText string
+			if x >= 1 && y == 0 {
+				cellText = strconv.Itoa(x)
+			} else if x == 0 && y >= 1 {
+				cellText = string(rune('A' + y - 1))
+			}
+
+			DrawCenteredText(
+				screen,
+				b.fontFace,
+				cellText,
+				int(b.pos.x+float32(x)*cellSize+cellSize/2),
+				int(b.pos.y+float32(y)*cellSize+cellSize/2),
+				color.Black,
 			)
 		}
 	}

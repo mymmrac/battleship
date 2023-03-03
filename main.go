@@ -15,8 +15,13 @@ func main() {
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println("Starting...")
 
-			game := NewGame()
-			if err := ebiten.RunGame(game); err != nil {
+			game, err := NewGame()
+			if err != nil {
+				_, _ = fmt.Fprintf(os.Stderr, "Load game failed: %s\n", err)
+				os.Exit(1)
+			}
+
+			if err = ebiten.RunGame(game); err != nil {
 				_, _ = fmt.Fprintf(os.Stderr, "Game crashed: %s\n", err)
 				os.Exit(1)
 			}
