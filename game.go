@@ -17,7 +17,9 @@ const (
 )
 
 type Game struct {
-	debug bool
+	debug         bool
+	myBoard       *board
+	opponentBoard *board
 }
 
 func NewGame() *Game {
@@ -36,7 +38,9 @@ func NewGame() *Game {
 	)
 
 	return &Game{
-		debug: true,
+		debug:         true,
+		myBoard:       newBoard(newPoint(48, 48)),
+		opponentBoard: newBoard(newPoint(48+400, 48)),
 	}
 }
 
@@ -51,6 +55,16 @@ func (g *Game) Update() error {
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyF3) {
 		g.debug = !g.debug
+	}
+
+	cx, cy := ebiten.CursorPosition()
+	cp := newPoint(float32(cx), float32(cy))
+
+	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		x, y, ok := g.opponentBoard.cellOn(cp)
+		if ok {
+			_ = g.opponentBoard.shoot(x, y)
+		}
 	}
 
 	return nil
@@ -70,7 +84,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		vector.StrokeLine(screen, float32(cx), 0, float32(cx), float32(size.Y), 2, color.White)
 	}
 
-	ebitenutil.DebugPrintAt(screen, "Hello World!", 100, 100)
+	g.myBoard.draw(screen)
+	g.opponentBoard.draw(screen)
 }
 
 func (g *Game) Layout(_, _ int) (int, int) {

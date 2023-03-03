@@ -13,12 +13,15 @@ func main() {
 		Use:   "battleship",
 		Short: "Battleship is two players sea battle game",
 		Run: func(cmd *cobra.Command, args []string) {
-			game := NewGame()
+			fmt.Println("Starting...")
 
+			game := NewGame()
 			if err := ebiten.RunGame(game); err != nil {
 				_, _ = fmt.Fprintf(os.Stderr, "Game crashed: %s\n", err)
 				os.Exit(1)
 			}
+
+			fmt.Println("Bye!")
 		},
 	}
 
