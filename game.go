@@ -21,12 +21,12 @@ const (
 )
 
 type Game struct {
-	debug         bool
-	myBoard       *board
-	opponentBoard *board
+	debug bool
 
-	hoverOnCell bool
-	hoverCell   point[int]
+	myBoard    *board
+	myShipyard *shipyard
+
+	opponentBoard *board
 }
 
 func NewGame() (*Game, error) {
@@ -58,9 +58,12 @@ func NewGame() (*Game, error) {
 		return nil, fmt.Errorf("create font face: %w", err)
 	}
 
+	myBoard := newBoard(newPoint[float32](48, 48), boardFace)
+
 	return &Game{
 		debug:         false,
-		myBoard:       newBoard(newPoint[float32](48, 48), boardFace),
+		myBoard:       myBoard,
+		myShipyard:    newShipyard(newPoint[float32](42, 500), myBoard),
 		opponentBoard: newBoard(newPoint[float32](48+400, 48), boardFace),
 	}, nil
 }
@@ -81,9 +84,21 @@ func (g *Game) Update() error {
 	cx, cy := ebiten.CursorPosition()
 	cp := newPoint(float32(cx), float32(cy))
 
-	g.hoverCell.x, g.hoverCell.y, g.hoverOnCell = g.opponentBoard.cellOn(cp)
-	if g.hoverOnCell && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-		_ = g.opponentBoard.shoot(g.hoverCell.x, g.hoverCell.y)
+	g.myBoard.update(cp)
+	g.opponentBoard.update(cp)
+
+	if g.myBoard.hover {
+		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+			g.myBoard.placeShip(g.myBoard.hoverX, g.myBoard.hoverY)
+		}
+
+		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
+			g.myBoard.removeShip(g.myBoard.hoverX, g.myBoard.hoverY)
+		}
+	}
+
+	if g.opponentBoard.hover && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		_ = g.opponentBoard.shoot(g.opponentBoard.hoverX, g.opponentBoard.hoverY)
 	}
 
 	return nil
@@ -106,15 +121,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	g.myBoard.draw(screen)
 	g.opponentBoard.draw(screen)
 
-	if g.hoverOnCell {
-		pos := g.opponentBoard.cellPos(g.hoverCell.x+1, g.hoverCell.y+1)
-		vector.StrokeRect(screen, pos.x, pos.y, cellSize, cellSize, 4, color.RGBA{
-			R: 236, // 149,
-			G: 168, // 189,
-			B: 105, // 255,
-			A: 255,
-		})
-	}
+	ebitenutil.DebugPrintAt(screen, fmt.Sprint(g.myShipyard.countShips()), 42, 600)
 }
 
 func (g *Game) Layout(_, _ int) (int, int) {

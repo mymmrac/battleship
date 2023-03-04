@@ -26,20 +26,22 @@ type board struct {
 	pos      point[float32]
 	cells    [10][10]cellKind
 	fontFace font.Face
+
+	hover  bool
+	hoverX int
+	hoverY int
 }
 
 func newBoard(pos point[float32], fontFace font.Face) *board {
-	c := [cellsCount][cellsCount]cellKind{}
-
-	c[1][1] = cellShip
-	c[1][3] = cellMiss
-	c[1][5] = cellShipHit
-
 	return &board{
 		pos:      pos,
-		cells:    c,
+		cells:    [cellsCount][cellsCount]cellKind{},
 		fontFace: fontFace,
 	}
+}
+
+func (b *board) update(cp point[float32]) {
+	b.hoverX, b.hoverY, b.hover = b.cellOn(cp)
 }
 
 func (b *board) draw(screen *ebiten.Image) {
@@ -144,6 +146,10 @@ func (b *board) draw(screen *ebiten.Image) {
 			)
 		}
 	}
+
+	if b.hover {
+		b.highlightCell(screen, b.hoverX, b.hoverY)
+	}
 }
 
 func (b *board) innerCellPos(x, y int) point[float32] {
@@ -191,4 +197,35 @@ func (b *board) shoot(x, y int) bool {
 	}
 
 	return false
+}
+
+func (b *board) placeShip(x, y int) {
+	if b.cells[y][x] != cellEmpty {
+		return
+	}
+
+	// FIXME
+	b.cells[y][x] = cellShip
+}
+
+func (b *board) removeShip(x, y int) {
+	if b.cells[y][x] != cellShip {
+		return
+	}
+
+	b.cells[y][x] = cellEmpty
+}
+
+func (b *board) at(x, y int) cellKind {
+	return b.cells[y][x]
+}
+
+func (b *board) highlightCell(screen *ebiten.Image, x, y int) {
+	pos := b.cellPos(x+1, y+1)
+	vector.StrokeRect(screen, pos.x, pos.y, cellSize, cellSize, 4, color.RGBA{
+		R: 236, // 149,
+		G: 168, // 189,
+		B: 105, // 255,
+		A: 255,
+	})
 }
