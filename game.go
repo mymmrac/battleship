@@ -62,7 +62,7 @@ func NewGame() (*Game, error) {
 		myBoard:        myBoard,
 		myShipyard:     newShipyard(newPoint[float32](48, 440), myBoard, boardFace),
 		opponentBoard:  newBoard(newPoint[float32](48+400, 48), boardFace),
-		playerReadyBtn: newButton(newPoint[float32](48, 560), 120, 40, "Ready", buttonFace),
+		playerReadyBtn: newButton(newPoint[float32](48, 570), 120, 40, false, "Ready", buttonFace),
 	}, nil
 }
 
@@ -101,6 +101,7 @@ func (g *Game) Update() error {
 		_ = g.opponentBoard.shoot(g.opponentBoard.hoverX, g.opponentBoard.hoverY)
 	}
 
+	g.playerReadyBtn.active = g.myShipyard.ready()
 	g.playerReadyBtn.update(cp)
 
 	if g.playerReadyBtn.clicked {
@@ -130,9 +131,6 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	g.opponentBoard.draw(screen)
 
 	g.playerReadyBtn.draw(screen)
-	// if g.myShipyard.ready() {
-	//
-	// }
 }
 
 func (g *Game) Layout(_, _ int) (int, int) {

@@ -13,6 +13,7 @@ type button struct {
 	pos      point[float32]
 	width    float32
 	height   float32
+	active   bool
 	text     string
 	fontFace font.Face
 
@@ -20,17 +21,24 @@ type button struct {
 	clicked bool
 }
 
-func newButton(pos point[float32], width float32, height float32, text string, fontFace font.Face) *button {
+func newButton(pos point[float32], width float32, height float32, active bool, text string, fontFace font.Face) *button {
 	return &button{
 		pos:      pos,
 		width:    width,
 		height:   height,
+		active:   active,
 		text:     text,
 		fontFace: fontFace,
 	}
 }
 
 func (b *button) update(cp point[float32]) {
+	if !b.active {
+		b.hover = false
+		b.clicked = false
+		return
+	}
+
 	b.hover = b.pos.x <= cp.x && cp.x <= b.pos.x+b.width &&
 		b.pos.y <= cp.y && cp.y <= b.pos.y+b.height
 
@@ -39,6 +47,10 @@ func (b *button) update(cp point[float32]) {
 
 func (b *button) draw(screen *ebiten.Image) {
 	// Border
+	clr := borderColor
+	if !b.active {
+		clr = mutedColor
+	}
 	vector.StrokeRect(
 		screen,
 		b.pos.x,
@@ -46,7 +58,7 @@ func (b *button) draw(screen *ebiten.Image) {
 		b.width,
 		b.height,
 		2,
-		borderColor,
+		clr,
 	)
 
 	// Background
@@ -62,9 +74,12 @@ func (b *button) draw(screen *ebiten.Image) {
 	}
 
 	// Text
-	clr := textLightColor
+	clr = textLightColor
 	if b.hover {
 		clr = textDarkColor
+	}
+	if !b.active {
+		clr = mutedColor
 	}
 	DrawCenteredText(screen, b.fontFace, b.text, int(b.pos.x+b.width/2), int(b.pos.y+b.height/2), clr)
 }
