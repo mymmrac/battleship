@@ -204,7 +204,52 @@ func (b *board) placeShip(x, y int) {
 		return
 	}
 
-	// FIXME
+	// Check diagonals
+	if x > 0 { // LEFT
+		if y > 0 { // UP
+			if b.cells[y-1][x-1] == cellShip {
+				return
+			}
+		}
+
+		if y < cellsCount-1 { // DOWN
+			if b.cells[y+1][x-1] == cellShip {
+				return
+			}
+		}
+	}
+	if x < cellsCount-1 { // RIGHT
+		if y > 0 { // UP
+			if b.cells[y-1][x+1] == cellShip {
+				return
+			}
+		}
+
+		if y < cellsCount-1 { // DOWN
+			if b.cells[y+1][x+1] == cellShip {
+				return
+			}
+		}
+	}
+
+	// Check length
+	length := 1
+	for dx := x - 1; dx >= 0 && b.cells[y][dx] == cellShip; dx-- {
+		length++
+	}
+	for dx := x + 1; dx < cellsCount && b.cells[y][dx] == cellShip; dx++ {
+		length++
+	}
+	for dy := y - 1; dy >= 0 && b.cells[dy][x] == cellShip; dy-- {
+		length++
+	}
+	for dy := y + 1; dy < cellsCount && b.cells[dy][x] == cellShip; dy++ {
+		length++
+	}
+	if length > longestShip {
+		return
+	}
+
 	b.cells[y][x] = cellShip
 }
 
@@ -223,9 +268,9 @@ func (b *board) at(x, y int) cellKind {
 func (b *board) highlightCell(screen *ebiten.Image, x, y int) {
 	pos := b.cellPos(x+1, y+1)
 	vector.StrokeRect(screen, pos.x, pos.y, cellSize, cellSize, 4, color.RGBA{
-		R: 236, // 149,
-		G: 168, // 189,
-		B: 105, // 255,
+		R: 236,
+		G: 168,
+		B: 105,
 		A: 255,
 	})
 }
