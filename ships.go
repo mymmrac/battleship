@@ -44,7 +44,7 @@ func newShipyard(pos point[float32], board *board, fontFace font.Face) *shipyard
 	}
 }
 
-func (s *shipyard) draw(screen *ebiten.Image) {
+func (s *shipyard) Draw(screen *ebiten.Image) {
 	longestShip := len(allowedShips)
 
 	// Border

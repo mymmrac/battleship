@@ -14,12 +14,12 @@ import (
 const (
 	baseWindowWidth  = 1080
 	baseWindowHeight = 720
-
-	dpi = 72
 )
 
 type Game struct {
 	debug bool
+
+	drawables []Drawable
 
 	myBoard    *board
 	myShipyard *shipyard
@@ -56,13 +56,28 @@ func NewGame() (*Game, error) {
 	}
 
 	myBoard := newBoard(newPoint[float32](48, 48), boardFace)
+	myShipyard := newShipyard(newPoint[float32](48, 440), myBoard, boardFace)
+
+	opponentBoard := newBoard(newPoint[float32](48+400, 48), boardFace)
+
+	playerReadyBtn := newButton(newPoint[float32](48, 570), 120, 40, false, "Ready", buttonFace)
 
 	return &Game{
-		debug:          false,
-		myBoard:        myBoard,
-		myShipyard:     newShipyard(newPoint[float32](48, 440), myBoard, boardFace),
-		opponentBoard:  newBoard(newPoint[float32](48+400, 48), boardFace),
-		playerReadyBtn: newButton(newPoint[float32](48, 570), 120, 40, false, "Ready", buttonFace),
+		debug: false,
+
+		drawables: []Drawable{
+			myBoard,
+			opponentBoard,
+			myShipyard,
+			playerReadyBtn,
+		},
+
+		myBoard:    myBoard,
+		myShipyard: myShipyard,
+
+		opponentBoard: opponentBoard,
+
+		playerReadyBtn: playerReadyBtn,
 	}, nil
 }
 
@@ -83,10 +98,6 @@ func (g *Game) Update() error {
 	cp := newPoint(float32(cx), float32(cy))
 
 	g.myBoard.update(cp)
-	g.myShipyard.update()
-
-	g.opponentBoard.update(cp)
-
 	if g.myBoard.hover {
 		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 			g.myBoard.placeShip(g.myBoard.hoverX, g.myBoard.hoverY)
@@ -97,13 +108,15 @@ func (g *Game) Update() error {
 		}
 	}
 
+	g.opponentBoard.update(cp)
 	if g.opponentBoard.hover && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 		_ = g.opponentBoard.shoot(g.opponentBoard.hoverX, g.opponentBoard.hoverY)
 	}
 
+	g.myShipyard.update()
+
 	g.playerReadyBtn.active = g.myShipyard.ready()
 	g.playerReadyBtn.update(cp)
-
 	if g.playerReadyBtn.clicked {
 		fmt.Println("OK")
 	}
@@ -125,12 +138,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		vector.StrokeLine(screen, float32(cx), 0, float32(cx), float32(size.Y), 2, color.White)
 	}
 
-	g.myBoard.draw(screen)
-	g.myShipyard.draw(screen)
-
-	g.opponentBoard.draw(screen)
-
-	g.playerReadyBtn.draw(screen)
+	for _, drawable := range g.drawables {
+		drawable.Draw(screen)
+	}
 }
 
 func (g *Game) Layout(_, _ int) (int, int) {
@@ -140,4 +150,8 @@ func (g *Game) Layout(_, _ int) (int, int) {
 func (g *Game) LayoutF(logicalWindowWidth, logicalWindowHeight float64) (float64, float64) {
 	scale := ebiten.DeviceScaleFactor()
 	return math.Ceil(logicalWindowWidth * scale), math.Ceil(logicalWindowHeight * scale)
+}
+
+type Drawable interface {
+	Draw(screen *ebiten.Image)
 }

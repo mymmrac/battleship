@@ -7,6 +7,8 @@ import (
 	"golang.org/x/image/font/opentype"
 )
 
+const dpi = 72
+
 var fontCache = map[string]*opentype.Font{}
 
 func loadFace(filename string, size float64) (font.Face, error) {

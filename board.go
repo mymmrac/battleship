@@ -45,7 +45,7 @@ func (b *board) update(cp point[float32]) {
 	b.hoverX, b.hoverY, b.hover = b.cellOn(cp)
 }
 
-func (b *board) draw(screen *ebiten.Image) {
+func (b *board) Draw(screen *ebiten.Image) {
 	// Border
 	vector.StrokeRect(
 		screen,

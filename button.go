@@ -45,7 +45,7 @@ func (b *button) update(cp point[float32]) {
 	b.clicked = b.hover && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft)
 }
 
-func (b *button) draw(screen *ebiten.Image) {
+func (b *button) Draw(screen *ebiten.Image) {
 	// Border
 	clr := borderColor
 	if !b.active {
