@@ -63,7 +63,7 @@ func NewGame() (*Game, error) {
 	return &Game{
 		debug:         false,
 		myBoard:       myBoard,
-		myShipyard:    newShipyard(newPoint[float32](42, 500), myBoard),
+		myShipyard:    newShipyard(newPoint[float32](48, 440), myBoard, boardFace),
 		opponentBoard: newBoard(newPoint[float32](48+400, 48), boardFace),
 	}, nil
 }
@@ -85,6 +85,8 @@ func (g *Game) Update() error {
 	cp := newPoint(float32(cx), float32(cy))
 
 	g.myBoard.update(cp)
+	g.myShipyard.update()
+
 	g.opponentBoard.update(cp)
 
 	if g.myBoard.hover {
@@ -119,9 +121,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 
 	g.myBoard.draw(screen)
-	g.opponentBoard.draw(screen)
+	g.myShipyard.draw(screen)
 
-	ebitenutil.DebugPrintAt(screen, fmt.Sprint(g.myShipyard.countShips()), 42, 600)
+	g.opponentBoard.draw(screen)
 }
 
 func (g *Game) Layout(_, _ int) (int, int) {

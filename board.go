@@ -12,6 +12,7 @@ import (
 const cellsCount = 10
 const cellSize float32 = 32
 const cellPaddingSize float32 = 4
+const innerCellSize = cellSize - cellPaddingSize
 
 type cellKind int
 
@@ -53,7 +54,7 @@ func (b *board) draw(screen *ebiten.Image) {
 		(cellsCount+1)*cellSize+cellPaddingSize*2,
 		(cellsCount+1)*cellSize+cellPaddingSize*2,
 		2,
-		color.White,
+		borderColor,
 	)
 
 	// Outer cells
@@ -68,9 +69,9 @@ func (b *board) draw(screen *ebiten.Image) {
 				screen,
 				pos.x,
 				pos.y,
-				b.innerCellSize(),
-				b.innerCellSize(),
-				color.Gray16{Y: 0xaaff},
+				innerCellSize,
+				innerCellSize,
+				mutedColor,
 			)
 		}
 	}
@@ -96,7 +97,7 @@ func (b *board) draw(screen *ebiten.Image) {
 				cellText,
 				int(pos.x+cellSize/2),
 				int(pos.y+cellSize/2),
-				color.Black,
+				textColor,
 			)
 		}
 	}
@@ -109,28 +110,13 @@ func (b *board) draw(screen *ebiten.Image) {
 			var clr color.Color
 			switch cell {
 			case cellEmpty:
-				clr = color.White
+				clr = emptyColor
 			case cellShip:
-				clr = color.RGBA{
-					R: 83,
-					G: 127,
-					B: 231,
-					A: 255,
-				}
+				clr = shipColor
 			case cellMiss:
-				clr = color.RGBA{
-					R: 60,
-					G: 64,
-					B: 72,
-					A: 255,
-				}
+				clr = missColor
 			case cellShipHit:
-				clr = color.RGBA{
-					R: 245,
-					G: 80,
-					B: 80,
-					A: 255,
-				}
+				clr = shipHitColor
 			default:
 				panic("unreachable")
 			}
@@ -140,8 +126,8 @@ func (b *board) draw(screen *ebiten.Image) {
 				screen,
 				pos.x,
 				pos.y,
-				b.innerCellSize(),
-				b.innerCellSize(),
+				innerCellSize,
+				innerCellSize,
 				clr,
 			)
 		}
@@ -157,10 +143,6 @@ func (b *board) innerCellPos(x, y int) point[float32] {
 		b.pos.x+float32(x)*cellSize+cellPaddingSize/2,
 		b.pos.y+float32(y)*cellSize+cellPaddingSize/2,
 	)
-}
-
-func (b *board) innerCellSize() float32 {
-	return cellSize - cellPaddingSize
 }
 
 func (b *board) cellPos(x, y int) point[float32] {
@@ -267,10 +249,5 @@ func (b *board) at(x, y int) cellKind {
 
 func (b *board) highlightCell(screen *ebiten.Image, x, y int) {
 	pos := b.cellPos(x+1, y+1)
-	vector.StrokeRect(screen, pos.x, pos.y, cellSize, cellSize, 4, color.RGBA{
-		R: 236,
-		G: 168,
-		B: 105,
-		A: 255,
-	})
+	vector.StrokeRect(screen, pos.x, pos.y, cellSize, cellSize, 4, highlightColor)
 }
