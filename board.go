@@ -228,7 +228,7 @@ func (b *board) placeShip(x, y int) {
 	for dy := y + 1; dy < cellsCount && b.cells[dy][x] == cellShip; dy++ {
 		length++
 	}
-	if length > longestShip {
+	if length > len(allowedShips) {
 		return
 	}
 

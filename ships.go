@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math"
 	"strconv"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -8,9 +9,7 @@ import (
 	"golang.org/x/image/font"
 )
 
-const longestShip = 5
-
-var allowedShips = [longestShip]int{
+var allowedShips = []int{
 	0, // 1
 	4, // 2
 	3, // 3
@@ -18,11 +17,14 @@ var allowedShips = [longestShip]int{
 	1, // 5
 }
 
+const shipyardBorder = false
+const maxShipyardRowLen = 12 // 24
+
 type shipyard struct {
 	pos      point[float32]
 	board    *board
 	fontFace font.Face
-	counts   [longestShip]int
+	counts   []int
 }
 
 func newShipyard(pos point[float32], board *board, fontFace font.Face) *shipyard {
@@ -30,25 +32,37 @@ func newShipyard(pos point[float32], board *board, fontFace font.Face) *shipyard
 		pos:      pos,
 		board:    board,
 		fontFace: fontFace,
-		counts:   [longestShip]int{},
+		counts:   make([]int, len(allowedShips)),
 	}
 }
 
 func (s *shipyard) draw(screen *ebiten.Image) {
+	longestShip := len(allowedShips)
+
 	// Border
-	vector.StrokeRect(
-		screen,
-		s.pos.x-cellPaddingSize,
-		s.pos.y-cellPaddingSize,
-		(longestShip+1)*cellSize+cellPaddingSize*2,
-		(longestShip)*cellSize+cellPaddingSize*2,
-		2,
-		borderColor,
-	)
+	if shipyardBorder {
+		size := longestShip*(longestShip+1)/2 + longestShip*2 - 1
+		rows := float32(math.Ceil(float64(size)/maxShipyardRowLen))*2 - 1
+		vector.StrokeRect(
+			screen,
+			s.pos.x-cellPaddingSize,
+			s.pos.y-cellPaddingSize,
+			(maxShipyardRowLen)*cellSize+cellPaddingSize*2,
+			(rows)*cellSize+cellPaddingSize*2,
+			2,
+			borderColor,
+		)
+	}
 
 	// Count cells
+	row, col := 0, 0
 	for y := 0; y < longestShip; y++ {
-		pos := s.innerCellPos(0, y)
+		if col+y+1+1 > maxShipyardRowLen {
+			col = 0
+			row += 2
+		}
+
+		pos := s.innerCellPos(col, row)
 		vector.DrawFilledRect(
 			screen,
 			pos.x,
@@ -57,11 +71,23 @@ func (s *shipyard) draw(screen *ebiten.Image) {
 			innerCellSize,
 			mutedColor,
 		)
+
+		col += y + 1 + 2
+		if col > maxShipyardRowLen {
+			col = 0
+			row += 2
+		}
 	}
 
 	// Count cells text
+	row, col = 0, 0
 	for y := 0; y < longestShip; y++ {
-		pos := s.cellPos(0, y)
+		if col+y+1+1 > maxShipyardRowLen {
+			col = 0
+			row += 2
+		}
+
+		pos := s.cellPos(col, row)
 		DrawCenteredText(
 			screen,
 			s.fontFace,
@@ -70,12 +96,24 @@ func (s *shipyard) draw(screen *ebiten.Image) {
 			int(pos.y+cellSize/2),
 			textColor,
 		)
+
+		col += y + 1 + 2
+		if col > maxShipyardRowLen {
+			col = 0
+			row += 2
+		}
 	}
 
 	// Ship cells
+	row, col = 0, 0
 	for y := 0; y < longestShip; y++ {
+		if col+y+1+1 > maxShipyardRowLen {
+			col = 0
+			row += 2
+		}
+
 		for x := 0; x < y+1; x++ {
-			pos := s.innerCellPos(x+1, y)
+			pos := s.innerCellPos(col+1, row)
 			vector.DrawFilledRect(
 				screen,
 				pos.x,
@@ -84,6 +122,18 @@ func (s *shipyard) draw(screen *ebiten.Image) {
 				innerCellSize,
 				shipColor,
 			)
+
+			col++
+			if col > maxShipyardRowLen {
+				col = 0
+				row += 2
+			}
+		}
+
+		col += 2
+		if col > maxShipyardRowLen {
+			col = 0
+			row += 2
 		}
 	}
 }
@@ -106,8 +156,8 @@ func (s *shipyard) update() {
 	s.counts = s.countShips()
 }
 
-func (s *shipyard) countShips() [longestShip]int {
-	ships := [longestShip]int{}
+func (s *shipyard) countShips() []int {
+	ships := make([]int, len(allowedShips))
 	visited := [cellsCount][cellsCount]bool{}
 
 	for y := 0; y < cellsCount; y++ {
