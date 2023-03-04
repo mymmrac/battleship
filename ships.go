@@ -24,7 +24,7 @@ type shipyard struct {
 	pos      point[float32]
 	board    *board
 	fontFace font.Face
-	counts   []int
+	ships    []int
 }
 
 func newShipyard(pos point[float32], board *board, fontFace font.Face) *shipyard {
@@ -32,7 +32,7 @@ func newShipyard(pos point[float32], board *board, fontFace font.Face) *shipyard
 		pos:      pos,
 		board:    board,
 		fontFace: fontFace,
-		counts:   make([]int, len(allowedShips)),
+		ships:    make([]int, len(allowedShips)),
 	}
 }
 
@@ -91,10 +91,10 @@ func (s *shipyard) draw(screen *ebiten.Image) {
 		DrawCenteredText(
 			screen,
 			s.fontFace,
-			strconv.Itoa(allowedShips[y]-s.counts[y]),
+			strconv.Itoa(allowedShips[y]-s.ships[y]),
 			int(pos.x+cellSize/2),
 			int(pos.y+cellSize/2),
-			textColor,
+			textDarkColor,
 		)
 
 		col += y + 1 + 2
@@ -153,10 +153,10 @@ func (s *shipyard) cellPos(x, y int) point[float32] {
 }
 
 func (s *shipyard) update() {
-	s.counts = s.countShips()
+	s.ships = s.shipsCount()
 }
 
-func (s *shipyard) countShips() []int {
+func (s *shipyard) shipsCount() []int {
 	ships := make([]int, len(allowedShips))
 	visited := [cellsCount][cellsCount]bool{}
 
@@ -192,4 +192,14 @@ func (s *shipyard) countShips() []int {
 	}
 
 	return ships
+}
+
+func (s *shipyard) ready() bool {
+	for i, count := range s.ships {
+		if allowedShips[i]-count != 0 {
+			return false
+		}
+	}
+
+	return true
 }

@@ -36,4 +36,5 @@ var shipHitColor = color.RGBA{
 	A: 255,
 }
 
-var textColor = color.Black
+var textDarkColor = color.Black
+var textLightColor = color.White

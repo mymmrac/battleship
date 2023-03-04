@@ -9,8 +9,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
-	"golang.org/x/image/font"
-	"golang.org/x/image/font/opentype"
 )
 
 const (
@@ -27,6 +25,9 @@ type Game struct {
 	myShipyard *shipyard
 
 	opponentBoard *board
+
+	playerReady    bool
+	playerReadyBtn *button
 }
 
 func NewGame() (*Game, error) {
@@ -44,27 +45,24 @@ func NewGame() (*Game, error) {
 		int(math.Ceil((float64(screenHeight)-windowHeight)/2.0)),
 	)
 
-	boardFont, err := LoadFont("JetBrainsMono-Regular.ttf")
+	boardFace, err := loadFace(JetBrainsMonoFont, float64(cellSize)*0.6)
 	if err != nil {
-		return nil, fmt.Errorf("load font: %w", err)
+		return nil, err
 	}
 
-	boardFace, err := opentype.NewFace(boardFont, &opentype.FaceOptions{
-		Size:    float64(cellSize) * 0.6,
-		DPI:     dpi,
-		Hinting: font.HintingFull,
-	})
+	buttonFace, err := loadFace(JetBrainsMonoFont, 24)
 	if err != nil {
-		return nil, fmt.Errorf("create font face: %w", err)
+		return nil, err
 	}
 
 	myBoard := newBoard(newPoint[float32](48, 48), boardFace)
 
 	return &Game{
-		debug:         false,
-		myBoard:       myBoard,
-		myShipyard:    newShipyard(newPoint[float32](48, 440), myBoard, boardFace),
-		opponentBoard: newBoard(newPoint[float32](48+400, 48), boardFace),
+		debug:          false,
+		myBoard:        myBoard,
+		myShipyard:     newShipyard(newPoint[float32](48, 440), myBoard, boardFace),
+		opponentBoard:  newBoard(newPoint[float32](48+400, 48), boardFace),
+		playerReadyBtn: newButton(newPoint[float32](48, 560), 120, 40, "Ready", buttonFace),
 	}, nil
 }
 
@@ -103,6 +101,12 @@ func (g *Game) Update() error {
 		_ = g.opponentBoard.shoot(g.opponentBoard.hoverX, g.opponentBoard.hoverY)
 	}
 
+	g.playerReadyBtn.update(cp)
+
+	if g.playerReadyBtn.clicked {
+		fmt.Println("OK")
+	}
+
 	return nil
 }
 
@@ -124,6 +128,11 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	g.myShipyard.draw(screen)
 
 	g.opponentBoard.draw(screen)
+
+	g.playerReadyBtn.draw(screen)
+	// if g.myShipyard.ready() {
+	//
+	// }
 }
 
 func (g *Game) Layout(_, _ int) (int, int) {

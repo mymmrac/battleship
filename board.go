@@ -97,7 +97,7 @@ func (b *board) draw(screen *ebiten.Image) {
 				cellText,
 				int(pos.x+cellSize/2),
 				int(pos.y+cellSize/2),
-				textColor,
+				textDarkColor,
 			)
 		}
 	}

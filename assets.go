@@ -9,6 +9,10 @@ import (
 	"golang.org/x/image/font/opentype"
 )
 
+const (
+	JetBrainsMonoFont = "JetBrainsMono-Regular.ttf"
+)
+
 //go:embed assets
 var assetDirFS embed.FS
 
