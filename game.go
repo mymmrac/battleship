@@ -20,7 +20,7 @@ type Game struct {
 	debug bool
 	exit  bool
 
-	server BattleshipServer
+	server BattleshipConnector
 	events chan Event
 
 	currentScene *Scene
@@ -85,7 +85,7 @@ func NewGame() (*Game, error) {
 	game := &Game{
 		debug: false,
 
-		server: NewServer(),
+		server: NewConnector(),
 		events: make(chan Event),
 
 		newGameBtn:  RegisterObject(newGameBtn),

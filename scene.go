@@ -97,7 +97,7 @@ func (g *Game) InitScenes() {
 					return
 				case EventNewGameStartFailed:
 					errEvent := event.(EventError)
-					fmt.Println(errEvent)
+					fmt.Println(errEvent) // TODO: Fix me
 					g.ChangeScene(sceneMenu)
 					return
 				default:
@@ -108,9 +108,37 @@ func (g *Game) InitScenes() {
 		},
 
 		sceneJoinGame: {
-			OnEnter:  nil,
-			OnUpdate: nil,
-			OnLeave:  nil,
+			OnEnter: func() {
+				go func() {
+					err := g.server.JoinGame()
+					if err != nil {
+						g.events <- NewEventError(EventJoinGameFailed, err)
+						return
+					}
+
+					g.events <- NewEventSignal(EventJoinedGame)
+				}()
+			},
+			OnUpdate: func() {
+				event, ok := <-g.events
+				if !ok {
+					return
+				}
+
+				switch event.EventType() {
+				case EventJoinedGame:
+					g.ChangeScene(scenePlaceShips)
+					return
+				case EventJoinGameFailed:
+					errEvent := event.(EventError)
+					fmt.Println(errEvent) // TODO: Fix me
+					g.ChangeScene(sceneMenu)
+					return
+				default:
+					panic("unexpected event type: " + strconv.Itoa(int(event.EventType())))
+				}
+			},
+			OnLeave: nil,
 		},
 
 		scenePlaceShips: {

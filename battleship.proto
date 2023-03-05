@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package api;
+
+option go_package = "./api";
+
+service EventManager {
+  rpc Events(stream Event) returns (stream Event) {}
+}
+
+message Event {
+  int32 eventType = 1;
+  repeated bytes data = 2;
+}

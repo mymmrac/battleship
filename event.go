@@ -6,6 +6,8 @@ const (
 	EventNone EventType = iota
 	EventNewGameStarted
 	EventNewGameStartFailed
+	EventJoinedGame
+	EventJoinGameFailed
 )
 
 type Event interface {
