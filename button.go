@@ -10,10 +10,11 @@ import (
 const buttonPadding float32 = 4
 
 type button struct {
+	GameObject
+
 	pos      point[float32]
 	width    float32
 	height   float32
-	active   bool
 	text     string
 	fontFace font.Face
 
@@ -21,19 +22,19 @@ type button struct {
 	clicked bool
 }
 
-func newButton(pos point[float32], width float32, height float32, active bool, text string, fontFace font.Face) *button {
+func newButton(pos point[float32], width float32, height float32, text string, fontFace font.Face) *button {
 	return &button{
-		pos:      pos,
-		width:    width,
-		height:   height,
-		active:   active,
-		text:     text,
-		fontFace: fontFace,
+		GameObject: NewGameObject(),
+		pos:        pos,
+		width:      width,
+		height:     height,
+		text:       text,
+		fontFace:   fontFace,
 	}
 }
 
 func (b *button) update(cp point[float32]) {
-	if !b.active {
+	if !b.Active() {
 		b.hover = false
 		b.clicked = false
 		return
@@ -46,9 +47,13 @@ func (b *button) update(cp point[float32]) {
 }
 
 func (b *button) Draw(screen *ebiten.Image) {
+	if !b.Visible() {
+		return
+	}
+
 	// Border
 	clr := borderColor
-	if !b.active {
+	if !b.Active() {
 		clr = mutedColor
 	}
 	vector.StrokeRect(
@@ -78,7 +83,7 @@ func (b *button) Draw(screen *ebiten.Image) {
 	if b.hover {
 		clr = textDarkColor
 	}
-	if !b.active {
+	if !b.Active() {
 		clr = mutedColor
 	}
 	DrawCenteredText(screen, b.fontFace, b.text, int(b.pos.x+b.width/2), int(b.pos.y+b.height/2), clr)

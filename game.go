@@ -16,17 +16,26 @@ const (
 	baseWindowHeight = 720
 )
 
+type gameState int
+
+const (
+	statePlaceShips gameState = iota
+	stateShipsPlaced
+	statePlayerReady
+)
+
 type Game struct {
 	debug bool
 
 	drawables []Drawable
+
+	state gameState
 
 	myBoard    *board
 	myShipyard *shipyard
 
 	opponentBoard *board
 
-	playerReady    bool
 	playerReadyBtn *button
 }
 
@@ -60,7 +69,8 @@ func NewGame() (*Game, error) {
 
 	opponentBoard := newBoard(newPoint[float32](48+400, 48), boardFace)
 
-	playerReadyBtn := newButton(newPoint[float32](48, 570), 120, 40, false, "Ready", buttonFace)
+	playerReadyBtn := newButton(newPoint[float32](48, 570), 120, 40, "Ready", buttonFace)
+	playerReadyBtn.Disable()
 
 	return &Game{
 		debug: false,
@@ -97,28 +107,65 @@ func (g *Game) Update() error {
 	cx, cy := ebiten.CursorPosition()
 	cp := newPoint(float32(cx), float32(cy))
 
-	g.myBoard.update(cp)
-	if g.myBoard.hover {
-		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-			g.myBoard.placeShip(g.myBoard.hoverX, g.myBoard.hoverY)
+	switch g.state {
+	case statePlaceShips:
+		g.myBoard.update(cp)
+		OnHover(g.myBoard.hover)
+
+		g.myShipyard.update()
+
+		if g.myBoard.hover {
+			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+				g.myBoard.placeShip(g.myBoard.hoverX, g.myBoard.hoverY)
+			}
+
+			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
+				g.myBoard.removeShip(g.myBoard.hoverX, g.myBoard.hoverY)
+			}
 		}
 
-		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
-			g.myBoard.removeShip(g.myBoard.hoverX, g.myBoard.hoverY)
+		if g.myShipyard.ready() {
+			g.playerReadyBtn.Enable()
+
+			g.state = stateShipsPlaced
 		}
-	}
+	case stateShipsPlaced:
+		g.myBoard.update(cp)
+		g.myShipyard.update()
 
-	g.opponentBoard.update(cp)
-	if g.opponentBoard.hover && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-		_ = g.opponentBoard.shoot(g.opponentBoard.hoverX, g.opponentBoard.hoverY)
-	}
+		if g.myBoard.hover {
+			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+				g.myBoard.placeShip(g.myBoard.hoverX, g.myBoard.hoverY)
+			}
 
-	g.myShipyard.update()
+			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
+				g.myBoard.removeShip(g.myBoard.hoverX, g.myBoard.hoverY)
+			}
+		}
 
-	g.playerReadyBtn.active = g.myShipyard.ready()
-	g.playerReadyBtn.update(cp)
-	if g.playerReadyBtn.clicked {
-		fmt.Println("OK")
+		if !g.myShipyard.ready() {
+			g.playerReadyBtn.Disable()
+
+			g.state = statePlaceShips
+		}
+
+		g.playerReadyBtn.update(cp)
+
+		OnHover(g.myBoard.hover || g.playerReadyBtn.hover)
+
+		if g.playerReadyBtn.clicked {
+			g.playerReadyBtn.Disable()
+			g.playerReadyBtn.Hide()
+			g.playerReadyBtn.update(cp)
+
+			g.state = statePlayerReady
+		}
+	case statePlayerReady:
+		g.opponentBoard.update(cp)
+		OnHover(g.opponentBoard.hover)
+		if g.opponentBoard.hover && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+			_ = g.opponentBoard.shoot(g.opponentBoard.hoverX, g.opponentBoard.hoverY)
+		}
 	}
 
 	return nil
@@ -154,4 +201,12 @@ func (g *Game) LayoutF(logicalWindowWidth, logicalWindowHeight float64) (float64
 
 type Drawable interface {
 	Draw(screen *ebiten.Image)
+}
+
+func OnHover(hover bool) {
+	if hover {
+		ebiten.SetCursorShape(ebiten.CursorShapePointer)
+	} else {
+		ebiten.SetCursorShape(ebiten.CursorShapeDefault)
+	}
 }
