@@ -16,18 +16,13 @@ const (
 	baseWindowHeight = 720
 )
 
-type gameState int
-
-const (
-	statePlaceShips gameState = iota
-	stateShipsPlaced
-	statePlayerReady
-)
-
 type Game struct {
 	debug bool
 
-	state gameState
+	state GameState
+
+	currentScene *Scene
+	scenes       map[GameState]*Scene
 
 	myBoard       *board
 	myShipyard    *shipyard
@@ -66,23 +61,16 @@ func NewGame() (*Game, error) {
 
 	myBoard := newBoard(newPoint[float32](48, 48), boardFace)
 	myShipyard := newShipyard(newPoint[float32](48, 440), myBoard, boardFace)
-
 	opponentBoard := newBoard(newPoint[float32](48+400, 48), boardFace)
-	opponentBoard.Disable()
 
 	readyBtn := newButton(newPoint[float32](48, 570), 120, 40, "Ready", buttonFace)
-	readyBtn.Disable()
-
 	notReadyBtn := newButton(newPoint[float32](48, 570), 160, 40, "Not Ready", buttonFace)
-	notReadyBtn.Disable()
-	notReadyBtn.Hide()
-
 	clearBoardBtn := newButton(newPoint[float32](48+120+32, 570), 120, 40, "Clear", buttonFace)
 
 	GlobalGameObjects.Acquire()
 	defer GlobalGameObjects.Release()
 
-	return &Game{
+	game := &Game{
 		debug: false,
 
 		state: statePlaceShips,
@@ -95,7 +83,13 @@ func NewGame() (*Game, error) {
 		clearBoardBtn: RegisterObject(clearBoardBtn),
 
 		objects: GlobalGameObjects.Objects(),
-	}, nil
+	}
+
+	game.InitScenes()
+	game.currentScene = game.scenes[statePlaceShips]
+	game.currentScene.OnEnter()
+
+	return game, nil
 }
 
 func (g *Game) Update() error {
@@ -132,88 +126,7 @@ func (g *Game) Update() error {
 		ebiten.SetCursorShape(ebiten.CursorShapeDefault)
 	}
 
-	switch g.state {
-	case statePlaceShips:
-		if g.myBoard.hover {
-			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-				g.myBoard.placeShip(g.myBoard.hoverX, g.myBoard.hoverY)
-			}
-
-			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
-				g.myBoard.removeShip(g.myBoard.hoverX, g.myBoard.hoverY)
-			}
-		}
-
-		if g.clearBoardBtn.clicked {
-			g.myBoard.cells = [cellsCount][cellsCount]cellKind{}
-		}
-
-		if g.myShipyard.ready() {
-			g.readyBtn.Enable()
-
-			g.state = stateShipsPlaced
-		}
-	case stateShipsPlaced:
-		if g.myBoard.hover {
-			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-				g.myBoard.placeShip(g.myBoard.hoverX, g.myBoard.hoverY)
-			}
-
-			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
-				g.myBoard.removeShip(g.myBoard.hoverX, g.myBoard.hoverY)
-			}
-		}
-
-		if g.clearBoardBtn.clicked {
-			g.myBoard.cells = [cellsCount][cellsCount]cellKind{}
-		}
-
-		if !g.myShipyard.ready() {
-			g.readyBtn.Disable()
-
-			g.clearBoardBtn.Enable()
-			g.clearBoardBtn.Show()
-
-			g.state = statePlaceShips
-		}
-
-		if g.readyBtn.clicked {
-			g.readyBtn.Disable()
-			g.readyBtn.Hide()
-
-			g.notReadyBtn.Enable()
-			g.notReadyBtn.Show()
-
-			g.clearBoardBtn.Disable()
-			g.clearBoardBtn.Hide()
-
-			g.myBoard.Disable()
-			g.opponentBoard.Enable()
-
-			g.state = statePlayerReady
-		}
-
-	case statePlayerReady:
-		if g.opponentBoard.hover && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-			_ = g.opponentBoard.shoot(g.opponentBoard.hoverX, g.opponentBoard.hoverY)
-		}
-
-		if g.notReadyBtn.clicked {
-			g.readyBtn.Enable()
-			g.readyBtn.Show()
-
-			g.notReadyBtn.Disable()
-			g.notReadyBtn.Hide()
-
-			g.clearBoardBtn.Enable()
-			g.clearBoardBtn.Show()
-
-			g.myBoard.Enable()
-			g.opponentBoard.Disable()
-
-			g.state = stateShipsPlaced
-		}
-	}
+	g.currentScene.OnUpdate()
 
 	return nil
 }

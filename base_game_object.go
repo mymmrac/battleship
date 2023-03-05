@@ -9,8 +9,8 @@ type BaseGameObject struct {
 
 func NewBaseGameObject() BaseGameObject {
 	return BaseGameObject{
-		active:  true,
-		visible: true,
+		active:  false,
+		visible: false,
 	}
 }
 
@@ -52,4 +52,14 @@ func (o *BaseGameObject) Hide() {
 
 func (o *BaseGameObject) CursorPointer() bool {
 	return false
+}
+
+func (o *BaseGameObject) EnableAndShow() {
+	o.active = true
+	o.visible = true
+}
+
+func (o *BaseGameObject) DisableAndHide() {
+	o.active = false
+	o.visible = false
 }
