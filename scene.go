@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"strconv"
+
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
@@ -8,7 +11,11 @@ import (
 type SceneID int
 
 const (
-	scenePlaceShips SceneID = iota
+	sceneNone SceneID = iota
+	sceneMenu
+	sceneNewGame
+	sceneJoinGame
+	scenePlaceShips
 	scenePlayerReady
 )
 
@@ -24,7 +31,11 @@ func (g *Game) ChangeScene(id SceneID) {
 		leave()
 	}
 
-	g.currentScene = g.scenes[id]
+	var ok bool
+	g.currentScene, ok = g.scenes[id]
+	if !ok {
+		panic("unknown scene ID " + strconv.Itoa(int(id)))
+	}
 
 	enter := g.currentScene.OnEnter
 	if enter != nil {
@@ -34,6 +45,74 @@ func (g *Game) ChangeScene(id SceneID) {
 
 func (g *Game) InitScenes() {
 	scenes := map[SceneID]*Scene{
+		sceneMenu: {
+			OnEnter: func() {
+				g.newGameBtn.EnableAndShow()
+				g.joinGameBtn.EnableAndShow()
+				g.exitBtn.EnableAndShow()
+			},
+			OnUpdate: func() {
+				if g.newGameBtn.clicked {
+					g.ChangeScene(sceneNewGame)
+					return
+				}
+
+				if g.joinGameBtn.clicked {
+					g.ChangeScene(sceneJoinGame)
+					return
+				}
+
+				if g.exitBtn.clicked {
+					g.exit = true
+				}
+			},
+			OnLeave: func() {
+				g.newGameBtn.DisableAndHide()
+				g.joinGameBtn.DisableAndHide()
+				g.exitBtn.DisableAndHide()
+			},
+		},
+
+		sceneNewGame: {
+			OnEnter: func() {
+				go func() {
+					err := g.server.StartNewGame()
+					if err != nil {
+						g.events <- NewEventError(EventNewGameStartFailed, err)
+						return
+					}
+
+					g.events <- NewEventSignal(EventNewGameStarted)
+				}()
+			},
+			OnUpdate: func() {
+				event, ok := <-g.events
+				if !ok {
+					return
+				}
+
+				switch event.EventType() {
+				case EventNewGameStarted:
+					g.ChangeScene(scenePlaceShips)
+					return
+				case EventNewGameStartFailed:
+					errEvent := event.(EventError)
+					fmt.Println(errEvent)
+					g.ChangeScene(sceneMenu)
+					return
+				default:
+					panic("unexpected event type: " + strconv.Itoa(int(event.EventType())))
+				}
+			},
+			OnLeave: nil,
+		},
+
+		sceneJoinGame: {
+			OnEnter:  nil,
+			OnUpdate: nil,
+			OnLeave:  nil,
+		},
+
 		scenePlaceShips: {
 			OnEnter: func() {
 				g.myBoard.EnableAndShow()
@@ -72,6 +151,7 @@ func (g *Game) InitScenes() {
 				g.clearBoardBtn.DisableAndHide()
 			},
 		},
+
 		scenePlayerReady: {
 			OnEnter: func() {
 				g.myBoard.Show()

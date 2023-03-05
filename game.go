@@ -18,16 +18,26 @@ const (
 
 type Game struct {
 	debug bool
+	exit  bool
+
+	server BattleshipServer
+	events chan Event
 
 	currentScene *Scene
 	scenes       map[SceneID]*Scene
 
-	myBoard       *board
-	myShipyard    *shipyard
-	opponentBoard *board
+	newGameBtn  *button
+	joinGameBtn *button
+	exitBtn     *button
+
+	myBoard    *board
+	myShipyard *shipyard
+
 	readyBtn      *button
 	notReadyBtn   *button
 	clearBoardBtn *button
+
+	opponentBoard *board
 
 	objects []GameObject
 }
@@ -47,12 +57,16 @@ func NewGame() (*Game, error) {
 		int(math.Ceil((float64(screenHeight)-windowHeight)/2.0)),
 	)
 
-	boardFace, err := loadFace(JetBrainsMonoFont, float64(cellSize)*0.6)
+	buttonFace, err := loadFace(JetBrainsMonoFont, 24)
 	if err != nil {
 		return nil, err
 	}
 
-	buttonFace, err := loadFace(JetBrainsMonoFont, 24)
+	newGameBtn := newButton(newPoint[float32](48, 48), 200, 40, "New Game", buttonFace)
+	joinGameBtn := newButton(newPoint[float32](48, 48+40+32), 200, 40, "Join Game", buttonFace)
+	exitBtn := newButton(newPoint[float32](48, 48+40*2+32*2), 200, 40, "Exit", buttonFace)
+
+	boardFace, err := loadFace(JetBrainsMonoFont, float64(cellSize)*0.6)
 	if err != nil {
 		return nil, err
 	}
@@ -71,25 +85,34 @@ func NewGame() (*Game, error) {
 	game := &Game{
 		debug: false,
 
-		myBoard:       RegisterObject(myBoard),
-		myShipyard:    RegisterObject(myShipyard),
-		opponentBoard: RegisterObject(opponentBoard),
+		server: NewServer(),
+		events: make(chan Event),
+
+		newGameBtn:  RegisterObject(newGameBtn),
+		joinGameBtn: RegisterObject(joinGameBtn),
+		exitBtn:     RegisterObject(exitBtn),
+
+		myBoard:    RegisterObject(myBoard),
+		myShipyard: RegisterObject(myShipyard),
+
 		readyBtn:      RegisterObject(readyBtn),
 		notReadyBtn:   RegisterObject(notReadyBtn),
 		clearBoardBtn: RegisterObject(clearBoardBtn),
+
+		opponentBoard: RegisterObject(opponentBoard),
 
 		objects: GlobalGameObjects.Objects(),
 	}
 
 	game.InitScenes()
-	game.currentScene = game.scenes[scenePlaceShips]
+	game.currentScene = game.scenes[sceneMenu]
 	game.currentScene.OnEnter()
 
 	return game, nil
 }
 
 func (g *Game) Update() error {
-	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+	if g.exit || inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		return ebiten.Termination
 	}
 
