@@ -27,7 +27,8 @@ const (
 type Game struct {
 	debug bool
 
-	drawables []Drawable
+	updatable []Updatable
+	drawable  []Drawable
 
 	state gameState
 
@@ -68,6 +69,7 @@ func NewGame() (*Game, error) {
 	myShipyard := newShipyard(newPoint[float32](48, 440), myBoard, boardFace)
 
 	opponentBoard := newBoard(newPoint[float32](48+400, 48), boardFace)
+	opponentBoard.Disable()
 
 	playerReadyBtn := newButton(newPoint[float32](48, 570), 120, 40, "Ready", buttonFace)
 	playerReadyBtn.Disable()
@@ -75,7 +77,14 @@ func NewGame() (*Game, error) {
 	return &Game{
 		debug: false,
 
-		drawables: []Drawable{
+		updatable: []Updatable{
+			myBoard,
+			opponentBoard,
+			myShipyard,
+			playerReadyBtn,
+		},
+
+		drawable: []Drawable{
 			myBoard,
 			opponentBoard,
 			myShipyard,
@@ -107,12 +116,15 @@ func (g *Game) Update() error {
 	cx, cy := ebiten.CursorPosition()
 	cp := newPoint(float32(cx), float32(cy))
 
+	for _, updatable := range g.updatable {
+		if updatable.Active() {
+			updatable.Update(cp)
+		}
+	}
+
 	switch g.state {
 	case statePlaceShips:
-		g.myBoard.update(cp)
 		OnHover(g.myBoard.hover)
-
-		g.myShipyard.update()
 
 		if g.myBoard.hover {
 			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
@@ -130,9 +142,6 @@ func (g *Game) Update() error {
 			g.state = stateShipsPlaced
 		}
 	case stateShipsPlaced:
-		g.myBoard.update(cp)
-		g.myShipyard.update()
-
 		if g.myBoard.hover {
 			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 				g.myBoard.placeShip(g.myBoard.hoverX, g.myBoard.hoverY)
@@ -149,19 +158,18 @@ func (g *Game) Update() error {
 			g.state = statePlaceShips
 		}
 
-		g.playerReadyBtn.update(cp)
-
 		OnHover(g.myBoard.hover || g.playerReadyBtn.hover)
 
 		if g.playerReadyBtn.clicked {
 			g.playerReadyBtn.Disable()
 			g.playerReadyBtn.Hide()
-			g.playerReadyBtn.update(cp)
+
+			g.myBoard.Disable()
+			g.opponentBoard.Enable()
 
 			g.state = statePlayerReady
 		}
 	case statePlayerReady:
-		g.opponentBoard.update(cp)
 		OnHover(g.opponentBoard.hover)
 		if g.opponentBoard.hover && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 			_ = g.opponentBoard.shoot(g.opponentBoard.hoverX, g.opponentBoard.hoverY)
@@ -185,8 +193,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		vector.StrokeLine(screen, float32(cx), 0, float32(cx), float32(size.Y), 2, color.White)
 	}
 
-	for _, drawable := range g.drawables {
-		drawable.Draw(screen)
+	for _, drawable := range g.drawable {
+		if drawable.Visible() {
+			drawable.Draw(screen)
+		}
 	}
 }
 
@@ -199,7 +209,13 @@ func (g *Game) LayoutF(logicalWindowWidth, logicalWindowHeight float64) (float64
 	return math.Ceil(logicalWindowWidth * scale), math.Ceil(logicalWindowHeight * scale)
 }
 
+type Updatable interface {
+	Active() bool
+	Update(cp point[float32])
+}
+
 type Drawable interface {
+	Visible() bool
 	Draw(screen *ebiten.Image)
 }
 

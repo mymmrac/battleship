@@ -33,24 +33,20 @@ func newButton(pos point[float32], width float32, height float32, text string, f
 	}
 }
 
-func (b *button) update(cp point[float32]) {
-	if !b.Active() {
-		b.hover = false
-		b.clicked = false
-		return
-	}
-
+func (b *button) Update(cp point[float32]) {
 	b.hover = b.pos.x <= cp.x && cp.x <= b.pos.x+b.width &&
 		b.pos.y <= cp.y && cp.y <= b.pos.y+b.height
 
 	b.clicked = b.hover && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft)
 }
 
-func (b *button) Draw(screen *ebiten.Image) {
-	if !b.Visible() {
-		return
-	}
+func (b *button) Disable() {
+	b.hover = false
+	b.clicked = false
+	b.GameObject.Disable()
+}
 
+func (b *button) Draw(screen *ebiten.Image) {
 	// Border
 	clr := borderColor
 	if !b.Active() {

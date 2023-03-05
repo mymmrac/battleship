@@ -29,6 +29,8 @@ const shipyardBorder = false
 const maxShipyardRowLen = 12 // 24
 
 type shipyard struct {
+	GameObject
+
 	pos      point[float32]
 	board    *board
 	fontFace font.Face
@@ -37,11 +39,16 @@ type shipyard struct {
 
 func newShipyard(pos point[float32], board *board, fontFace font.Face) *shipyard {
 	return &shipyard{
-		pos:      pos,
-		board:    board,
-		fontFace: fontFace,
-		ships:    make([]int, len(allowedShips)),
+		GameObject: NewGameObject(),
+		pos:        pos,
+		board:      board,
+		fontFace:   fontFace,
+		ships:      make([]int, len(allowedShips)),
 	}
+}
+
+func (s *shipyard) Update(_ point[float32]) {
+	s.ships = s.shipsCount()
 }
 
 func (s *shipyard) Draw(screen *ebiten.Image) {
@@ -158,10 +165,6 @@ func (s *shipyard) cellPos(x, y int) point[float32] {
 		s.pos.x+float32(x)*cellSize,
 		s.pos.y+float32(y)*cellSize,
 	)
-}
-
-func (s *shipyard) update() {
-	s.ships = s.shipsCount()
 }
 
 func (s *shipyard) shipsCount() []int {
