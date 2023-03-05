@@ -5,11 +5,11 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
-type GameState int
+type SceneID int
 
 const (
-	statePlaceShips GameState = iota
-	statePlayerReady
+	scenePlaceShips SceneID = iota
+	scenePlayerReady
 )
 
 type Scene struct {
@@ -18,13 +18,13 @@ type Scene struct {
 	OnLeave  func()
 }
 
-func (g *Game) ChangeScene(state GameState) {
+func (g *Game) ChangeScene(id SceneID) {
 	leave := g.currentScene.OnLeave
 	if leave != nil {
 		leave()
 	}
 
-	g.currentScene = g.scenes[state]
+	g.currentScene = g.scenes[id]
 
 	enter := g.currentScene.OnEnter
 	if enter != nil {
@@ -33,8 +33,8 @@ func (g *Game) ChangeScene(state GameState) {
 }
 
 func (g *Game) InitScenes() {
-	scenes := map[GameState]*Scene{
-		statePlaceShips: {
+	scenes := map[SceneID]*Scene{
+		scenePlaceShips: {
 			OnEnter: func() {
 				g.myBoard.EnableAndShow()
 				g.myShipyard.EnableAndShow()
@@ -61,7 +61,7 @@ func (g *Game) InitScenes() {
 				g.readyBtn.SetActive(g.myShipyard.ready())
 
 				if g.readyBtn.clicked {
-					g.ChangeScene(statePlayerReady)
+					g.ChangeScene(scenePlayerReady)
 					return
 				}
 			},
@@ -72,7 +72,7 @@ func (g *Game) InitScenes() {
 				g.clearBoardBtn.DisableAndHide()
 			},
 		},
-		statePlayerReady: {
+		scenePlayerReady: {
 			OnEnter: func() {
 				g.myBoard.Show()
 				g.opponentBoard.EnableAndShow()
@@ -85,7 +85,7 @@ func (g *Game) InitScenes() {
 				}
 
 				if g.notReadyBtn.clicked {
-					g.ChangeScene(statePlaceShips)
+					g.ChangeScene(scenePlaceShips)
 				}
 			},
 			OnLeave: func() {

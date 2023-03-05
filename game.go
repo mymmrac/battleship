@@ -19,10 +19,8 @@ const (
 type Game struct {
 	debug bool
 
-	state GameState
-
 	currentScene *Scene
-	scenes       map[GameState]*Scene
+	scenes       map[SceneID]*Scene
 
 	myBoard       *board
 	myShipyard    *shipyard
@@ -73,8 +71,6 @@ func NewGame() (*Game, error) {
 	game := &Game{
 		debug: false,
 
-		state: statePlaceShips,
-
 		myBoard:       RegisterObject(myBoard),
 		myShipyard:    RegisterObject(myShipyard),
 		opponentBoard: RegisterObject(opponentBoard),
@@ -86,7 +82,7 @@ func NewGame() (*Game, error) {
 	}
 
 	game.InitScenes()
-	game.currentScene = game.scenes[statePlaceShips]
+	game.currentScene = game.scenes[scenePlaceShips]
 	game.currentScene.OnEnter()
 
 	return game, nil
