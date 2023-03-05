@@ -49,3 +49,7 @@ func (o *BaseGameObject) Show() {
 func (o *BaseGameObject) Hide() {
 	o.visible = false
 }
+
+func (o *BaseGameObject) CursorPointer() bool {
+	return false
+}

@@ -8,6 +8,7 @@ import (
 
 type GameObject interface {
 	Active() bool
+	CursorPointer() bool
 	Update(cp point[float32])
 	Visible() bool
 	Draw(screen *ebiten.Image)

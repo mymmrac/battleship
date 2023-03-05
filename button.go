@@ -46,6 +46,10 @@ func (b *button) Disable() {
 	b.BaseGameObject.Disable()
 }
 
+func (b *button) CursorPointer() bool {
+	return b.hover
+}
+
 func (b *button) Draw(screen *ebiten.Image) {
 	// Border
 	clr := borderColor

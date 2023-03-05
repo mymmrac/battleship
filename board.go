@@ -48,6 +48,10 @@ func (b *board) Update(cp point[float32]) {
 	b.hoverX, b.hoverY, b.hover = b.cellOn(cp)
 }
 
+func (b *board) CursorPointer() bool {
+	return b.hover
+}
+
 func (b *board) Disable() {
 	b.hover = false
 	b.BaseGameObject.Disable()

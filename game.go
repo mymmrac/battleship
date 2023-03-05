@@ -29,11 +29,12 @@ type Game struct {
 
 	state gameState
 
-	myBoard        *board
-	myShipyard     *shipyard
-	opponentBoard  *board
-	playerReadyBtn *button
-	clearBoardBtn  *button
+	myBoard       *board
+	myShipyard    *shipyard
+	opponentBoard *board
+	readyBtn      *button
+	notReadyBtn   *button
+	clearBoardBtn *button
 
 	objects []GameObject
 }
@@ -69,8 +70,12 @@ func NewGame() (*Game, error) {
 	opponentBoard := newBoard(newPoint[float32](48+400, 48), boardFace)
 	opponentBoard.Disable()
 
-	playerReadyBtn := newButton(newPoint[float32](48, 570), 120, 40, "Ready", buttonFace)
-	playerReadyBtn.Disable()
+	readyBtn := newButton(newPoint[float32](48, 570), 120, 40, "Ready", buttonFace)
+	readyBtn.Disable()
+
+	notReadyBtn := newButton(newPoint[float32](48, 570), 160, 40, "Not Ready", buttonFace)
+	notReadyBtn.Disable()
+	notReadyBtn.Hide()
 
 	clearBoardBtn := newButton(newPoint[float32](48+120+32, 570), 120, 40, "Clear", buttonFace)
 
@@ -82,11 +87,12 @@ func NewGame() (*Game, error) {
 
 		state: statePlaceShips,
 
-		myBoard:        RegisterObject(myBoard),
-		myShipyard:     RegisterObject(myShipyard),
-		opponentBoard:  RegisterObject(opponentBoard),
-		playerReadyBtn: RegisterObject(playerReadyBtn),
-		clearBoardBtn:  RegisterObject(clearBoardBtn),
+		myBoard:       RegisterObject(myBoard),
+		myShipyard:    RegisterObject(myShipyard),
+		opponentBoard: RegisterObject(opponentBoard),
+		readyBtn:      RegisterObject(readyBtn),
+		notReadyBtn:   RegisterObject(notReadyBtn),
+		clearBoardBtn: RegisterObject(clearBoardBtn),
 
 		objects: GlobalGameObjects.Objects(),
 	}, nil
@@ -108,10 +114,22 @@ func (g *Game) Update() error {
 	cx, cy := ebiten.CursorPosition()
 	cp := newPoint(float32(cx), float32(cy))
 
+	cursorPointer := false
+
 	for _, updatable := range g.objects {
 		if updatable.Active() {
 			updatable.Update(cp)
+
+			if updatable.CursorPointer() {
+				cursorPointer = true
+			}
 		}
+	}
+
+	if cursorPointer {
+		ebiten.SetCursorShape(ebiten.CursorShapePointer)
+	} else {
+		ebiten.SetCursorShape(ebiten.CursorShapeDefault)
 	}
 
 	switch g.state {
@@ -131,7 +149,7 @@ func (g *Game) Update() error {
 		}
 
 		if g.myShipyard.ready() {
-			g.playerReadyBtn.Enable()
+			g.readyBtn.Enable()
 
 			g.state = stateShipsPlaced
 		}
@@ -151,7 +169,7 @@ func (g *Game) Update() error {
 		}
 
 		if !g.myShipyard.ready() {
-			g.playerReadyBtn.Disable()
+			g.readyBtn.Disable()
 
 			g.clearBoardBtn.Enable()
 			g.clearBoardBtn.Show()
@@ -159,9 +177,12 @@ func (g *Game) Update() error {
 			g.state = statePlaceShips
 		}
 
-		if g.playerReadyBtn.clicked {
-			g.playerReadyBtn.Disable()
-			g.playerReadyBtn.Hide()
+		if g.readyBtn.clicked {
+			g.readyBtn.Disable()
+			g.readyBtn.Hide()
+
+			g.notReadyBtn.Enable()
+			g.notReadyBtn.Show()
 
 			g.clearBoardBtn.Disable()
 			g.clearBoardBtn.Hide()
@@ -176,9 +197,23 @@ func (g *Game) Update() error {
 		if g.opponentBoard.hover && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 			_ = g.opponentBoard.shoot(g.opponentBoard.hoverX, g.opponentBoard.hoverY)
 		}
-	}
 
-	OnHover(g.myBoard.hover || g.opponentBoard.hover || g.playerReadyBtn.hover || g.clearBoardBtn.hover)
+		if g.notReadyBtn.clicked {
+			g.readyBtn.Enable()
+			g.readyBtn.Show()
+
+			g.notReadyBtn.Disable()
+			g.notReadyBtn.Hide()
+
+			g.clearBoardBtn.Enable()
+			g.clearBoardBtn.Show()
+
+			g.myBoard.Enable()
+			g.opponentBoard.Disable()
+
+			g.state = stateShipsPlaced
+		}
+	}
 
 	return nil
 }
@@ -211,12 +246,4 @@ func (g *Game) Layout(_, _ int) (int, int) {
 func (g *Game) LayoutF(logicalWindowWidth, logicalWindowHeight float64) (float64, float64) {
 	scale := ebiten.DeviceScaleFactor()
 	return math.Ceil(logicalWindowWidth * scale), math.Ceil(logicalWindowHeight * scale)
-}
-
-func OnHover(hover bool) {
-	if hover {
-		ebiten.SetCursorShape(ebiten.CursorShapePointer)
-	} else {
-		ebiten.SetCursorShape(ebiten.CursorShapeDefault)
-	}
 }
