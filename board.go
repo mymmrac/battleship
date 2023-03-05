@@ -24,7 +24,7 @@ const (
 )
 
 type board struct {
-	GameObject
+	BaseGameObject
 
 	pos      point[float32]
 	cells    [10][10]cellKind
@@ -37,10 +37,10 @@ type board struct {
 
 func newBoard(pos point[float32], fontFace font.Face) *board {
 	return &board{
-		GameObject: NewGameObject(),
-		pos:        pos,
-		cells:      [cellsCount][cellsCount]cellKind{},
-		fontFace:   fontFace,
+		BaseGameObject: NewBaseGameObject(),
+		pos:            pos,
+		cells:          [cellsCount][cellsCount]cellKind{},
+		fontFace:       fontFace,
 	}
 }
 
@@ -50,7 +50,7 @@ func (b *board) Update(cp point[float32]) {
 
 func (b *board) Disable() {
 	b.hover = false
-	b.GameObject.Disable()
+	b.BaseGameObject.Disable()
 }
 
 func (b *board) Draw(screen *ebiten.Image) {

@@ -10,7 +10,7 @@ import (
 const buttonPadding float32 = 4
 
 type button struct {
-	GameObject
+	BaseGameObject
 
 	pos      point[float32]
 	width    float32
@@ -24,12 +24,12 @@ type button struct {
 
 func newButton(pos point[float32], width float32, height float32, text string, fontFace font.Face) *button {
 	return &button{
-		GameObject: NewGameObject(),
-		pos:        pos,
-		width:      width,
-		height:     height,
-		text:       text,
-		fontFace:   fontFace,
+		BaseGameObject: NewBaseGameObject(),
+		pos:            pos,
+		width:          width,
+		height:         height,
+		text:           text,
+		fontFace:       fontFace,
 	}
 }
 
@@ -43,7 +43,7 @@ func (b *button) Update(cp point[float32]) {
 func (b *button) Disable() {
 	b.hover = false
 	b.clicked = false
-	b.GameObject.Disable()
+	b.BaseGameObject.Disable()
 }
 
 func (b *button) Draw(screen *ebiten.Image) {

@@ -27,17 +27,14 @@ const (
 type Game struct {
 	debug bool
 
-	updatable []Updatable
-	drawable  []Drawable
-
 	state gameState
 
-	myBoard    *board
-	myShipyard *shipyard
-
-	opponentBoard *board
-
+	myBoard        *board
+	myShipyard     *shipyard
+	opponentBoard  *board
 	playerReadyBtn *button
+
+	objects []GameObject
 }
 
 func NewGame() (*Game, error) {
@@ -74,29 +71,20 @@ func NewGame() (*Game, error) {
 	playerReadyBtn := newButton(newPoint[float32](48, 570), 120, 40, "Ready", buttonFace)
 	playerReadyBtn.Disable()
 
+	GlobalGameObjects.Acquire()
+	defer GlobalGameObjects.Release()
+
 	return &Game{
 		debug: false,
 
-		updatable: []Updatable{
-			myBoard,
-			opponentBoard,
-			myShipyard,
-			playerReadyBtn,
-		},
+		state: statePlaceShips,
 
-		drawable: []Drawable{
-			myBoard,
-			opponentBoard,
-			myShipyard,
-			playerReadyBtn,
-		},
+		myBoard:        RegisterObject(myBoard),
+		myShipyard:     RegisterObject(myShipyard),
+		opponentBoard:  RegisterObject(opponentBoard),
+		playerReadyBtn: RegisterObject(playerReadyBtn),
 
-		myBoard:    myBoard,
-		myShipyard: myShipyard,
-
-		opponentBoard: opponentBoard,
-
-		playerReadyBtn: playerReadyBtn,
+		objects: GlobalGameObjects.Objects(),
 	}, nil
 }
 
@@ -116,7 +104,7 @@ func (g *Game) Update() error {
 	cx, cy := ebiten.CursorPosition()
 	cp := newPoint(float32(cx), float32(cy))
 
-	for _, updatable := range g.updatable {
+	for _, updatable := range g.objects {
 		if updatable.Active() {
 			updatable.Update(cp)
 		}
@@ -193,7 +181,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		vector.StrokeLine(screen, float32(cx), 0, float32(cx), float32(size.Y), 2, color.White)
 	}
 
-	for _, drawable := range g.drawable {
+	for _, drawable := range g.objects {
 		if drawable.Visible() {
 			drawable.Draw(screen)
 		}
@@ -207,16 +195,6 @@ func (g *Game) Layout(_, _ int) (int, int) {
 func (g *Game) LayoutF(logicalWindowWidth, logicalWindowHeight float64) (float64, float64) {
 	scale := ebiten.DeviceScaleFactor()
 	return math.Ceil(logicalWindowWidth * scale), math.Ceil(logicalWindowHeight * scale)
-}
-
-type Updatable interface {
-	Active() bool
-	Update(cp point[float32])
-}
-
-type Drawable interface {
-	Visible() bool
-	Draw(screen *ebiten.Image)
 }
 
 func OnHover(hover bool) {
