@@ -27,7 +27,7 @@ type board struct {
 	BaseGameObject
 
 	pos      point[float32]
-	cells    [10][10]cellKind
+	cells    [cellsCount][cellsCount]cellKind
 	fontFace font.Face
 
 	hover  bool

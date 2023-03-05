@@ -33,6 +33,7 @@ type Game struct {
 	myShipyard     *shipyard
 	opponentBoard  *board
 	playerReadyBtn *button
+	clearBoardBtn  *button
 
 	objects []GameObject
 }
@@ -71,6 +72,8 @@ func NewGame() (*Game, error) {
 	playerReadyBtn := newButton(newPoint[float32](48, 570), 120, 40, "Ready", buttonFace)
 	playerReadyBtn.Disable()
 
+	clearBoardBtn := newButton(newPoint[float32](48+120+32, 570), 120, 40, "Clear", buttonFace)
+
 	GlobalGameObjects.Acquire()
 	defer GlobalGameObjects.Release()
 
@@ -83,6 +86,7 @@ func NewGame() (*Game, error) {
 		myShipyard:     RegisterObject(myShipyard),
 		opponentBoard:  RegisterObject(opponentBoard),
 		playerReadyBtn: RegisterObject(playerReadyBtn),
+		clearBoardBtn:  RegisterObject(clearBoardBtn),
 
 		objects: GlobalGameObjects.Objects(),
 	}, nil
@@ -112,8 +116,6 @@ func (g *Game) Update() error {
 
 	switch g.state {
 	case statePlaceShips:
-		OnHover(g.myBoard.hover)
-
 		if g.myBoard.hover {
 			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 				g.myBoard.placeShip(g.myBoard.hoverX, g.myBoard.hoverY)
@@ -122,6 +124,10 @@ func (g *Game) Update() error {
 			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
 				g.myBoard.removeShip(g.myBoard.hoverX, g.myBoard.hoverY)
 			}
+		}
+
+		if g.clearBoardBtn.clicked {
+			g.myBoard.cells = [cellsCount][cellsCount]cellKind{}
 		}
 
 		if g.myShipyard.ready() {
@@ -140,29 +146,39 @@ func (g *Game) Update() error {
 			}
 		}
 
+		if g.clearBoardBtn.clicked {
+			g.myBoard.cells = [cellsCount][cellsCount]cellKind{}
+		}
+
 		if !g.myShipyard.ready() {
 			g.playerReadyBtn.Disable()
+
+			g.clearBoardBtn.Enable()
+			g.clearBoardBtn.Show()
 
 			g.state = statePlaceShips
 		}
 
-		OnHover(g.myBoard.hover || g.playerReadyBtn.hover)
-
 		if g.playerReadyBtn.clicked {
 			g.playerReadyBtn.Disable()
 			g.playerReadyBtn.Hide()
+
+			g.clearBoardBtn.Disable()
+			g.clearBoardBtn.Hide()
 
 			g.myBoard.Disable()
 			g.opponentBoard.Enable()
 
 			g.state = statePlayerReady
 		}
+
 	case statePlayerReady:
-		OnHover(g.opponentBoard.hover)
 		if g.opponentBoard.hover && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 			_ = g.opponentBoard.shoot(g.opponentBoard.hoverX, g.opponentBoard.hoverY)
 		}
 	}
+
+	OnHover(g.myBoard.hover || g.opponentBoard.hover || g.playerReadyBtn.hover || g.clearBoardBtn.hover)
 
 	return nil
 }
