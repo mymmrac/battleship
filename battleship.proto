@@ -10,5 +10,5 @@ service EventManager {
 
 message Event {
   int32 eventType = 1;
-  repeated bytes data = 2;
+  optional bytes data = 2;
 }

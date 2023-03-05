@@ -97,7 +97,7 @@ func (g *Game) InitScenes() {
 					return
 				case EventNewGameStartFailed:
 					errEvent := event.(EventError)
-					fmt.Println(errEvent) // TODO: Fix me
+					fmt.Println(errEvent.err) // TODO: Fix me
 					g.ChangeScene(sceneMenu)
 					return
 				default:
@@ -131,7 +131,7 @@ func (g *Game) InitScenes() {
 					return
 				case EventJoinGameFailed:
 					errEvent := event.(EventError)
-					fmt.Println(errEvent) // TODO: Fix me
+					fmt.Println(errEvent.err) // TODO: Fix me
 					g.ChangeScene(sceneMenu)
 					return
 				default:

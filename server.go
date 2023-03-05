@@ -1,11 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/alts"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/mymmrac/battleship/api"
 )
@@ -29,6 +30,7 @@ type BattleshipConnector interface {
 type Connector struct {
 	eventManagerClient api.EventManagerClient
 	grpcConn           *grpc.ClientConn
+	eventClientStream  api.EventManager_EventsClient
 
 	eventManagerServer *EventManagerServer
 	grpcServer         *grpc.Server
@@ -42,8 +44,7 @@ const grpcPort = "42443"
 const grpcAddr = "127.0.0.1"
 
 func (c *Connector) StartNewGame() error {
-	altsTC := alts.NewServerCreds(alts.DefaultServerOptions())
-	c.grpcServer = grpc.NewServer(grpc.Creds(altsTC))
+	c.grpcServer = grpc.NewServer()
 
 	c.eventManagerServer = &EventManagerServer{}
 	api.RegisterEventManagerServer(c.grpcServer, c.eventManagerServer)
@@ -69,13 +70,26 @@ func (c *Connector) StopGame() error {
 
 func (c *Connector) JoinGame() error {
 	var err error
-	altsTC := alts.NewClientCreds(alts.DefaultClientOptions())
-	c.grpcConn, err = grpc.Dial(grpcAddr+":"+grpcPort, grpc.WithTransportCredentials(altsTC))
+	c.grpcConn, err = grpc.Dial(grpcAddr+":"+grpcPort, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return err
 	}
 
 	c.eventManagerClient = api.NewEventManagerClient(c.grpcConn)
+
+	c.eventClientStream, err = c.eventManagerClient.Events(context.Background())
+	if err != nil {
+		return err
+	}
+
+	err = c.eventClientStream.Send(&api.Event{
+		EventType: int32(EventJoinedGame),
+		Data:      nil,
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
