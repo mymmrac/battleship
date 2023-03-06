@@ -89,7 +89,8 @@ func (g *Game) InitScenes() {
 				go func() {
 					var err error
 					// TODO: Close connection
-					g.grpcConn, err = grpc.Dial(grpcAddr+":"+grpcPort, grpc.WithTransportCredentials(insecure.NewCredentials()))
+					g.grpcConn, err = grpc.Dial(g.serverAddr+":"+g.serverPort,
+						grpc.WithTransportCredentials(insecure.NewCredentials()))
 					if err != nil {
 						g.events <- NewGameEventError(GameEventNewGameStartFailed, err)
 						return
@@ -167,7 +168,8 @@ func (g *Game) InitScenes() {
 				go func() {
 					var err error
 					// TODO: Close connection
-					g.grpcConn, err = grpc.Dial(grpcAddr+":"+grpcPort, grpc.WithTransportCredentials(insecure.NewCredentials()))
+					g.grpcConn, err = grpc.Dial(g.serverAddr+":"+g.serverPort,
+						grpc.WithTransportCredentials(insecure.NewCredentials()))
 					if err != nil {
 						g.events <- NewGameEventError(GameEventJoinGameFailed, err)
 						return

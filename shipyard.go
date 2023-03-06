@@ -12,21 +12,21 @@ import (
 	"github.com/mymmrac/battleship/ui"
 )
 
-// var allowedShips = []int{
-// 	0, // 1
-// 	4, // 2
-// 	3, // 3
-// 	2, // 4
-// 	1, // 5
-// }
-
-var allowedShips = []int{ // TODO: Remove
-	2, // 1
-	0, // 2
-	0, // 3
-	0, // 4
-	0, // 5
+var allowedShips = []int{
+	0, // 1
+	4, // 2
+	3, // 3
+	2, // 4
+	1, // 5
 }
+
+// var allowedShips = []int{ // TODO: Remove
+// 	2, // 1
+// 	0, // 2
+// 	0, // 3
+// 	0, // 4
+// 	0, // 5
+// }
 
 const shipyardBorder = false
 const maxShipyardRowLen = 12 // 24

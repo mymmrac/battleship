@@ -24,6 +24,9 @@ type Game struct {
 	debug bool
 	exit  bool
 
+	serverAddr string
+	serverPort string
+
 	grpcConn     *grpc.ClientConn
 	eventManager *EventManagerClient
 
@@ -58,7 +61,7 @@ type Game struct {
 	objects []GameObject
 }
 
-func NewGame() (*Game, error) {
+func NewGame(serverAddr, serverPort string) (*Game, error) {
 	ebiten.SetWindowTitle("Battleship")
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 
@@ -114,6 +117,9 @@ func NewGame() (*Game, error) {
 
 	game := &Game{
 		debug: false,
+
+		serverAddr: serverAddr,
+		serverPort: serverPort,
 
 		events: make(chan GameEvent),
 

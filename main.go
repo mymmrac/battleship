@@ -14,17 +14,19 @@ import (
 	"github.com/mymmrac/battleship/api"
 )
 
-const grpcPort = "42443"
-const grpcAddr = "127.0.0.1"
+const defaultGRPCPort = "42284"
 
 func main() {
+	var serverAddr string
+	var serverPort string
+
 	rootCmd := &cobra.Command{
 		Use:   "battleship",
 		Short: "Battleship is two players sea battle game",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println("Starting...")
 
-			game, err := NewGame()
+			game, err := NewGame(serverAddr, serverPort)
 			if err != nil {
 				_, _ = fmt.Fprintf(os.Stderr, "Load game failed: %s\n", err)
 				os.Exit(1)
@@ -39,6 +41,9 @@ func main() {
 		},
 	}
 
+	rootCmd.Flags().StringVarP(&serverAddr, "address", "a", "127.0.0.1", "Battleship server address used to connect")
+	rootCmd.Flags().StringVarP(&serverPort, "port", "p", defaultGRPCPort, "Battleship server port used to connect")
+
 	serverCmd := &cobra.Command{
 		Use:   "server",
 		Short: "Battleship game server",
@@ -50,7 +55,7 @@ func main() {
 			grpcServer := grpc.NewServer()
 			api.RegisterEventManagerServer(grpcServer, em)
 
-			listener, err := net.Listen("tcp", ":"+grpcPort)
+			listener, err := net.Listen("tcp", ":"+serverPort)
 			if err != nil {
 				_, _ = fmt.Fprintf(os.Stderr, "Server crashed: %s\n", err)
 				os.Exit(1)
@@ -66,9 +71,32 @@ func main() {
 		},
 	}
 
+	serverCmd.Flags().StringVarP(&serverPort, "port", "p", defaultGRPCPort, "Battleship server port used to start server")
+
 	rootCmd.AddCommand(serverCmd)
+
+	walkCmd(rootCmd, updateHelp)
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
+	}
+}
+
+func walkCmd(cmd *cobra.Command, f func(*cobra.Command)) {
+	f(cmd)
+	for _, childCmd := range cmd.Commands() {
+		walkCmd(childCmd, f)
+	}
+}
+
+func updateHelp(cmd *cobra.Command) {
+	cmd.InitDefaultHelpFlag()
+	f := cmd.Flags().Lookup("help")
+	if f != nil {
+		if cmd.Name() != "" {
+			f.Usage = "Help for " + cmd.Name()
+		} else {
+			f.Usage = "Help for this command"
+		}
 	}
 }
