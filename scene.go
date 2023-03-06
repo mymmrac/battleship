@@ -247,7 +247,7 @@ func (g *Game) InitScenes() {
 				}
 
 				if g.clearBoardBtn.Clicked() {
-					g.myBoard.cells = [cellsCount][cellsCount]cellKind{}
+					g.myBoard.cells = [cellsCount][cellsCount]CellKind{}
 				}
 
 				g.readyBtn.SetActive(g.myShipyard.ready())
@@ -424,12 +424,12 @@ func (g *Game) InitScenes() {
 
 						var sendEvent GameEvent
 						switch g.myBoard.AtPos(coordEvent.Pos) {
-						case cellEmpty:
+						case CellEmpty:
 							sendEvent = NewGameEventSignal(GameEventMiss)
-							g.myBoard.SetAt(coordEvent.Pos, cellMiss)
-						case cellShip:
+							g.myBoard.SetAt(coordEvent.Pos, CellMiss)
+						case CellShip:
 							sendEvent = NewGameEventSignal(GameEventHit)
-							g.myBoard.SetAt(coordEvent.Pos, cellShipHit)
+							g.myBoard.SetAt(coordEvent.Pos, CellShipHit)
 							hit = true
 							// TODO: Send destroyed
 						}
@@ -443,12 +443,12 @@ func (g *Game) InitScenes() {
 
 						g.myTurn = !hit
 					case GameEventMiss:
-						g.opponentBoard.SetAt(g.lastShootPos, cellMiss)
+						g.opponentBoard.SetAt(g.lastShootPos, CellMiss)
 					case GameEventHit:
-						g.opponentBoard.SetAt(g.lastShootPos, cellShipHit)
+						g.opponentBoard.SetAt(g.lastShootPos, CellShipHit)
 						g.myTurn = true
 					case GameEventDestroyed:
-						g.opponentBoard.SetAt(g.lastShootPos, cellShipHit)
+						g.opponentBoard.SetAt(g.lastShootPos, CellShipHit)
 						g.myTurn = true
 						// TODO: Mark all empty spots
 					}

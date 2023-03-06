@@ -17,20 +17,20 @@ const cellSize float32 = 32
 const cellPaddingSize float32 = 4
 const innerCellSize = cellSize - cellPaddingSize
 
-type cellKind int
+type CellKind int
 
 const (
-	cellEmpty cellKind = iota
-	cellShip
-	cellMiss
-	cellShipHit
+	CellEmpty CellKind = iota
+	CellShip
+	CellMiss
+	CellShipHit
 )
 
 type Board struct {
 	core.BaseGameObject
 
 	pos      core.Point[float32]
-	cells    [cellsCount][cellsCount]cellKind
+	cells    [cellsCount][cellsCount]CellKind
 	fontFace font.Face
 
 	hover    bool
@@ -41,7 +41,7 @@ func NewBoard(pos core.Point[float32], fontFace font.Face) *Board {
 	return &Board{
 		BaseGameObject: core.NewBaseGameObject(),
 		pos:            pos,
-		cells:          [cellsCount][cellsCount]cellKind{},
+		cells:          [cellsCount][cellsCount]CellKind{},
 		fontFace:       fontFace,
 	}
 }
@@ -123,13 +123,13 @@ func (b *Board) Draw(screen *ebiten.Image) {
 
 			var clr color.Color
 			switch cell {
-			case cellEmpty:
+			case CellEmpty:
 				clr = ui.EmptyColor
-			case cellShip:
+			case CellShip:
 				clr = ui.ShipColor
-			case cellMiss:
+			case CellMiss:
 				clr = ui.MissColor
-			case cellShipHit:
+			case CellShipHit:
 				clr = ui.ShipHitColor
 			default:
 				panic("unreachable")
@@ -183,39 +183,39 @@ func (b *Board) cellOn(p core.Point[float32]) (int, int, bool) {
 }
 
 func (b *Board) canShoot(pos core.Point[int]) bool {
-	return b.cells[pos.Y][pos.X] == cellEmpty
+	return b.cells[pos.Y][pos.X] == CellEmpty
 }
 
 func (b *Board) placeShip(pos core.Point[int]) {
 	x, y := pos.X, pos.Y
 
-	if b.cells[y][x] != cellEmpty {
+	if b.cells[y][x] != CellEmpty {
 		return
 	}
 
 	// Check diagonals
 	if x > 0 { // LEFT
 		if y > 0 { // UP
-			if b.cells[y-1][x-1] == cellShip {
+			if b.cells[y-1][x-1] == CellShip {
 				return
 			}
 		}
 
 		if y < cellsCount-1 { // DOWN
-			if b.cells[y+1][x-1] == cellShip {
+			if b.cells[y+1][x-1] == CellShip {
 				return
 			}
 		}
 	}
 	if x < cellsCount-1 { // RIGHT
 		if y > 0 { // UP
-			if b.cells[y-1][x+1] == cellShip {
+			if b.cells[y-1][x+1] == CellShip {
 				return
 			}
 		}
 
 		if y < cellsCount-1 { // DOWN
-			if b.cells[y+1][x+1] == cellShip {
+			if b.cells[y+1][x+1] == CellShip {
 				return
 			}
 		}
@@ -223,38 +223,38 @@ func (b *Board) placeShip(pos core.Point[int]) {
 
 	// Check length
 	length := 1
-	for dx := x - 1; dx >= 0 && b.cells[y][dx] == cellShip; dx-- {
+	for dx := x - 1; dx >= 0 && b.cells[y][dx] == CellShip; dx-- {
 		length++
 	}
-	for dx := x + 1; dx < cellsCount && b.cells[y][dx] == cellShip; dx++ {
+	for dx := x + 1; dx < cellsCount && b.cells[y][dx] == CellShip; dx++ {
 		length++
 	}
-	for dy := y - 1; dy >= 0 && b.cells[dy][x] == cellShip; dy-- {
+	for dy := y - 1; dy >= 0 && b.cells[dy][x] == CellShip; dy-- {
 		length++
 	}
-	for dy := y + 1; dy < cellsCount && b.cells[dy][x] == cellShip; dy++ {
+	for dy := y + 1; dy < cellsCount && b.cells[dy][x] == CellShip; dy++ {
 		length++
 	}
 	if length > len(allowedShips) {
 		return
 	}
 
-	b.cells[y][x] = cellShip
+	b.cells[y][x] = CellShip
 }
 
 func (b *Board) removeShip(pos core.Point[int]) {
-	if b.cells[pos.Y][pos.X] != cellShip {
+	if b.cells[pos.Y][pos.X] != CellShip {
 		return
 	}
 
-	b.cells[pos.Y][pos.X] = cellEmpty
+	b.cells[pos.Y][pos.X] = CellEmpty
 }
 
-func (b *Board) At(x, y int) cellKind {
+func (b *Board) At(x, y int) CellKind {
 	return b.cells[y][x]
 }
 
-func (b *Board) AtPos(pos core.Point[int]) cellKind {
+func (b *Board) AtPos(pos core.Point[int]) CellKind {
 	return b.cells[pos.Y][pos.X]
 }
 
@@ -263,6 +263,6 @@ func (b *Board) highlightCell(screen *ebiten.Image, boardPos core.Point[int]) {
 	vector.StrokeRect(screen, pos.X, pos.Y, cellSize, cellSize, 4, ui.HighlightColor)
 }
 
-func (b *Board) SetAt(pos core.Point[int], kind cellKind) {
+func (b *Board) SetAt(pos core.Point[int], kind CellKind) {
 	b.cells[pos.Y][pos.X] = kind
 }

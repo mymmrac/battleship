@@ -181,11 +181,11 @@ func (s *Shipyard) shipsCount() []int {
 			}
 			visited[y][x] = true
 
-			if s.board.At(x, y) == cellShip {
+			if s.board.At(x, y) == CellShip {
 				l := 1
 
 				dx := x + 1
-				for dx < cellsCount && s.board.At(dx, y) == cellShip {
+				for dx < cellsCount && s.board.At(dx, y) == CellShip {
 					visited[y][dx] = true
 					l++
 					dx++
@@ -193,7 +193,7 @@ func (s *Shipyard) shipsCount() []int {
 
 				if l == 1 {
 					dy := y + 1
-					for dy < cellsCount && s.board.At(x, dy) == cellShip {
+					for dy < cellsCount && s.board.At(x, dy) == CellShip {
 						visited[dy][x] = true
 						l++
 						dy++
