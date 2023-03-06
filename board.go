@@ -243,6 +243,10 @@ func (b *Board) placeShip(pos core.Point[int]) {
 }
 
 func (b *Board) FillIfDestroyed(pos core.Point[int]) bool {
+	if b.AtPos(pos) != CellShipHit {
+		return false
+	}
+
 	x := pos.X
 	y := pos.Y
 
@@ -278,10 +282,16 @@ func (b *Board) FillIfDestroyed(pos core.Point[int]) bool {
 		return false
 	}
 
-	// TODO: Fix this
+	for i := ty - 1; i <= by+1; i++ {
+		if i < 0 || i >= cellsCount {
+			continue
+		}
 
-	for i := ty - 1; i >= 0 && i < cellsCount && i <= by+1; i++ {
-		for j := lx - 1; j >= 0 && j < cellsCount && j <= rx+1; j++ {
+		for j := lx - 1; j <= rx+1; j++ {
+			if j < 0 || j >= cellsCount {
+				continue
+			}
+
 			if b.cells[i][j] != CellShipHit {
 				b.cells[i][j] = CellMiss
 			}

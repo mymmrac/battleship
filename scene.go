@@ -455,7 +455,6 @@ func (g *Game) InitScenes() {
 						g.opponentBoard.SetAt(g.lastShootPos, CellShipHit)
 						_ = g.opponentBoard.FillIfDestroyed(g.lastShootPos)
 						g.myTurn = true
-						// TODO: Mark all empty spots
 					}
 				default:
 					panic("unexpected event type: " + strconv.Itoa(int(event.EventType())))
