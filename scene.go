@@ -229,6 +229,7 @@ func (g *Game) InitScenes() {
 				g.myBoard.EnableAndShow()
 				g.myShipyard.EnableAndShow()
 				g.clearBoardBtn.EnableAndShow()
+				g.opponentReadyLabel.Show()
 
 				g.readyBtn.Disable()
 				g.readyBtn.Show()
@@ -254,21 +255,61 @@ func (g *Game) InitScenes() {
 					g.ChangeScene(ScenePlayerReady)
 					return
 				}
+
+				var event GameEvent
+				select {
+				case event = <-g.events:
+				// Pass
+				default:
+					return
+				}
+
+				switch event.EventType() {
+				case GameEventFromServer:
+					serverEvent := event.(ServerEvent)
+
+					var signalEvent GameEventSignal
+					err := json.Unmarshal(serverEvent.Data, &signalEvent)
+					if err != nil {
+						fmt.Println(err) // TODO: Fix me
+						return
+					}
+
+					if signalEvent.Type == GameEventPlayerReady {
+						g.opponentReadyLabel.SetText("Opponent: ready")
+						return
+					} else if signalEvent.Type == GameEventPlayerNotReady {
+						g.opponentReadyLabel.SetText("Opponent: not ready")
+						return
+					}
+				default:
+					panic("unexpected event type: " + strconv.Itoa(int(event.EventType())))
+				}
 			},
 			OnLeave: func() {
 				g.myBoard.DisableAndHide()
 				g.myShipyard.DisableAndHide()
 				g.readyBtn.DisableAndHide()
 				g.clearBoardBtn.DisableAndHide()
+				g.opponentReadyLabel.Hide()
 			},
 		},
 
 		ScenePlayerReady: {
 			OnEnter: func() {
+				go func() {
+					err := g.eventManager.SendGameEvent(NewGameEventSignal(GameEventPlayerReady))
+					if err != nil {
+						fmt.Println(err) // TODO: Fix me
+						return
+					}
+				}()
+
 				g.myBoard.Show()
 				g.opponentBoard.EnableAndShow()
 				g.notReadyBtn.EnableAndShow()
 				g.clearBoardBtn.DisableAndHide()
+				g.opponentReadyLabel.Show()
 			},
 			OnUpdate: func() {
 				if g.opponentBoard.hover && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
@@ -278,11 +319,54 @@ func (g *Game) InitScenes() {
 				if g.notReadyBtn.Clicked() {
 					g.ChangeScene(ScenePlaceShips)
 				}
+
+				var event GameEvent
+				select {
+				case event = <-g.events:
+				// Pass
+				default:
+					return
+				}
+
+				// if opponentReady {
+				// // TODO: Start game
+				// }
+
+				switch event.EventType() {
+				case GameEventFromServer:
+					serverEvent := event.(ServerEvent)
+
+					var signalEvent GameEventSignal
+					err := json.Unmarshal(serverEvent.Data, &signalEvent)
+					if err != nil {
+						fmt.Println(err) // TODO: Fix me
+						return
+					}
+
+					if signalEvent.Type == GameEventPlayerReady {
+						g.opponentReadyLabel.SetText("Opponent: ready")
+						return // TODO: Start game
+					} else if signalEvent.Type == GameEventPlayerNotReady {
+						g.opponentReadyLabel.SetText("Opponent: not ready")
+						return
+					}
+				default:
+					panic("unexpected event type: " + strconv.Itoa(int(event.EventType())))
+				}
 			},
 			OnLeave: func() {
 				g.myBoard.DisableAndHide()
 				g.opponentBoard.DisableAndHide()
 				g.notReadyBtn.DisableAndHide()
+				g.opponentReadyLabel.Hide()
+
+				go func() {
+					err := g.eventManager.SendGameEvent(NewGameEventSignal(GameEventPlayerNotReady))
+					if err != nil {
+						fmt.Println(err) // TODO: Fix me
+						return
+					}
+				}()
 			},
 		},
 	}

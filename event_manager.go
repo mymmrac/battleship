@@ -239,3 +239,16 @@ func (c *EventManagerClient) HandleGameEvents(events chan<- GameEvent) error {
 		events <- serverEvent
 	}
 }
+
+func (c *EventManagerClient) SendGameEvent(event GameEvent) error {
+	data, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+
+	return c.stream.Send(ServerEvent{
+		Type: ServerEventGameEvent,
+		From: c.playerID,
+		Data: data,
+	}.ToGRPC())
+}

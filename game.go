@@ -41,9 +41,10 @@ type Game struct {
 	myBoard    *Board
 	myShipyard *Shipyard
 
-	readyBtn      *ui.Button
-	notReadyBtn   *ui.Button
-	clearBoardBtn *ui.Button
+	readyBtn           *ui.Button
+	notReadyBtn        *ui.Button
+	clearBoardBtn      *ui.Button
+	opponentReadyLabel *ui.Label
 
 	opponentBoard *Board
 
@@ -80,7 +81,6 @@ func NewGame() (*Game, error) {
 	exitBtn := ui.NewButton(core.NewPoint[float32](48, 48+40*2+32*2), 200, 40, "Exit", buttonFace)
 
 	newGameLoadingLabel := ui.NewLabel(core.NewPoint[float32](48, 48), "", labelFace)
-	newGameLoadingLabel.SetAlignment(ui.LabelAlignmentTopLeft)
 
 	boardFace, err := loadFace(JetBrainsMonoFont, float64(cellSize)*0.6)
 	if err != nil {
@@ -94,6 +94,7 @@ func NewGame() (*Game, error) {
 	readyBtn := ui.NewButton(core.NewPoint[float32](48, 570), 120, 40, "Ready", buttonFace)
 	notReadyBtn := ui.NewButton(core.NewPoint[float32](48, 570), 160, 40, "Not Ready", buttonFace)
 	clearBoardBtn := ui.NewButton(core.NewPoint[float32](48+120+32, 570), 120, 40, "Clear", buttonFace)
+	opponentReadyLabel := ui.NewLabel(core.NewPoint[float32](48, 640), "Opponent: not ready", labelFace)
 
 	GlobalGameObjects.Acquire()
 	defer GlobalGameObjects.Release()
@@ -112,9 +113,10 @@ func NewGame() (*Game, error) {
 		myBoard:    RegisterObject(myBoard),
 		myShipyard: RegisterObject(myShipyard),
 
-		readyBtn:      RegisterObject(readyBtn),
-		notReadyBtn:   RegisterObject(notReadyBtn),
-		clearBoardBtn: RegisterObject(clearBoardBtn),
+		readyBtn:           RegisterObject(readyBtn),
+		notReadyBtn:        RegisterObject(notReadyBtn),
+		clearBoardBtn:      RegisterObject(clearBoardBtn),
+		opponentReadyLabel: RegisterObject(opponentReadyLabel),
 
 		opponentBoard: RegisterObject(opponentBoard),
 

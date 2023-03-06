@@ -9,6 +9,8 @@ const (
 	GameEventNewGameStartFailed
 	GameEventJoinedGame
 	GameEventJoinGameFailed
+	GameEventPlayerReady
+	GameEventPlayerNotReady
 )
 
 type GameEvent interface {

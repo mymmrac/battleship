@@ -12,7 +12,8 @@ import (
 type LabelAlignment int
 
 const (
-	LabelAlignmentCenter LabelAlignment = iota
+	_ LabelAlignment = iota
+	LabelAlignmentCenter
 	LabelAlignmentTopLeft
 )
 
@@ -31,6 +32,7 @@ func NewLabel(pos core.Point[float32], text string, fontFace font.Face) *Label {
 		pos:            pos,
 		text:           text,
 		fontFace:       fontFace,
+		alignment:      LabelAlignmentTopLeft,
 	}
 }
 
