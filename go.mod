@@ -3,6 +3,7 @@ module github.com/mymmrac/battleship
 go 1.20
 
 require (
+	github.com/google/uuid v1.3.0
 	github.com/hajimehoshi/ebiten/v2 v2.5.0-alpha.13
 	github.com/spf13/cobra v1.6.1
 	golang.org/x/image v0.5.0

@@ -9,6 +9,11 @@ service EventManager {
 }
 
 message Event {
-  int32 eventType = 1;
-  optional bytes data = 2;
+  int32 type = 1;
+  UUID from = 2;
+  optional bytes data = 3;
+}
+
+message UUID {
+  bytes value = 1;
 }

@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             v3.12.4
-// source: battleship.proto
+// source: event_manager.proto
 
 package api
 
@@ -137,5 +137,5 @@ var EventManager_ServiceDesc = grpc.ServiceDesc{
 			ClientStreams: true,
 		},
 	},
-	Metadata: "battleship.proto",
+	Metadata: "event_manager.proto",
 }

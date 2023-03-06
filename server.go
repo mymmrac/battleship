@@ -11,10 +11,6 @@ import (
 	"github.com/mymmrac/battleship/api"
 )
 
-type EventManagerServer struct {
-	api.UnimplementedEventManagerServer
-}
-
 type BattleshipConnector interface {
 	StartNewGame() error
 	StopGame() error
@@ -40,9 +36,6 @@ type Connector struct {
 func NewConnector() *Connector {
 	return &Connector{}
 }
-
-const grpcPort = "42443"
-const grpcAddr = "127.0.0.1"
 
 func (c *Connector) StartNewGame() error {
 	c.grpcServer = grpc.NewServer()
@@ -86,8 +79,8 @@ func (c *Connector) JoinGame() error {
 	}
 
 	err = c.eventClientStream.Send(&api.Event{
-		EventType: int32(EventJoinedGame),
-		Data:      nil,
+		// EventType: int32(EventJoinedGame),
+		Data: nil,
 	})
 	if err != nil {
 		return err
