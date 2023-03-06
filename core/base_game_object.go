@@ -1,4 +1,4 @@
-package main
+package core
 
 import "github.com/hajimehoshi/ebiten/v2"
 
@@ -14,7 +14,7 @@ func NewBaseGameObject() BaseGameObject {
 	}
 }
 
-func (o *BaseGameObject) Update(_ point[float32]) {}
+func (o *BaseGameObject) Update(_ Point[float32]) {}
 
 func (o *BaseGameObject) Draw(_ *ebiten.Image) {}
 

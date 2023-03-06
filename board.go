@@ -7,6 +7,9 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"golang.org/x/image/font"
+
+	"github.com/mymmrac/battleship/core"
+	"github.com/mymmrac/battleship/ui"
 )
 
 const cellsCount = 10
@@ -23,10 +26,10 @@ const (
 	cellShipHit
 )
 
-type board struct {
-	BaseGameObject
+type Board struct {
+	core.BaseGameObject
 
-	pos      point[float32]
+	pos      core.Point[float32]
 	cells    [cellsCount][cellsCount]cellKind
 	fontFace font.Face
 
@@ -35,38 +38,38 @@ type board struct {
 	hoverY int
 }
 
-func newBoard(pos point[float32], fontFace font.Face) *board {
-	return &board{
-		BaseGameObject: NewBaseGameObject(),
+func NewBoard(pos core.Point[float32], fontFace font.Face) *Board {
+	return &Board{
+		BaseGameObject: core.NewBaseGameObject(),
 		pos:            pos,
 		cells:          [cellsCount][cellsCount]cellKind{},
 		fontFace:       fontFace,
 	}
 }
 
-func (b *board) Update(cp point[float32]) {
+func (b *Board) Update(cp core.Point[float32]) {
 	b.hoverX, b.hoverY, b.hover = b.cellOn(cp)
 }
 
-func (b *board) CursorPointer() bool {
+func (b *Board) CursorPointer() bool {
 	return b.hover
 }
 
-func (b *board) Disable() {
+func (b *Board) Disable() {
 	b.hover = false
 	b.BaseGameObject.Disable()
 }
 
-func (b *board) Draw(screen *ebiten.Image) {
+func (b *Board) Draw(screen *ebiten.Image) {
 	// Border
 	vector.StrokeRect(
 		screen,
-		b.pos.x-cellPaddingSize,
-		b.pos.y-cellPaddingSize,
+		b.pos.X-cellPaddingSize,
+		b.pos.Y-cellPaddingSize,
 		(cellsCount+1)*cellSize+cellPaddingSize*2,
 		(cellsCount+1)*cellSize+cellPaddingSize*2,
 		2,
-		borderColor,
+		ui.BorderColor,
 	)
 
 	// Outer cells
@@ -79,11 +82,11 @@ func (b *board) Draw(screen *ebiten.Image) {
 			pos := b.innerCellPos(x, y)
 			vector.DrawFilledRect(
 				screen,
-				pos.x,
-				pos.y,
+				pos.X,
+				pos.Y,
 				innerCellSize,
 				innerCellSize,
-				mutedColor,
+				ui.MutedColor,
 			)
 		}
 	}
@@ -103,13 +106,13 @@ func (b *board) Draw(screen *ebiten.Image) {
 			}
 
 			pos := b.cellPos(x, y)
-			DrawCenteredText(
+			ui.DrawCenteredText(
 				screen,
 				b.fontFace,
 				cellText,
-				int(pos.x+cellSize/2),
-				int(pos.y+cellSize/2),
-				textDarkColor,
+				int(pos.X+cellSize/2),
+				int(pos.Y+cellSize/2),
+				ui.TextDarkColor,
 			)
 		}
 	}
@@ -122,13 +125,13 @@ func (b *board) Draw(screen *ebiten.Image) {
 			var clr color.Color
 			switch cell {
 			case cellEmpty:
-				clr = emptyColor
+				clr = ui.EmptyColor
 			case cellShip:
-				clr = shipColor
+				clr = ui.ShipColor
 			case cellMiss:
-				clr = missColor
+				clr = ui.MissColor
 			case cellShipHit:
-				clr = shipHitColor
+				clr = ui.ShipHitColor
 			default:
 				panic("unreachable")
 			}
@@ -136,8 +139,8 @@ func (b *board) Draw(screen *ebiten.Image) {
 			pos := b.innerCellPos(x+1, y+1)
 			vector.DrawFilledRect(
 				screen,
-				pos.x,
-				pos.y,
+				pos.X,
+				pos.Y,
 				innerCellSize,
 				innerCellSize,
 				clr,
@@ -150,28 +153,28 @@ func (b *board) Draw(screen *ebiten.Image) {
 	}
 }
 
-func (b *board) innerCellPos(x, y int) point[float32] {
-	return newPoint(
-		b.pos.x+float32(x)*cellSize+cellPaddingSize/2,
-		b.pos.y+float32(y)*cellSize+cellPaddingSize/2,
+func (b *Board) innerCellPos(x, y int) core.Point[float32] {
+	return core.NewPoint(
+		b.pos.X+float32(x)*cellSize+cellPaddingSize/2,
+		b.pos.Y+float32(y)*cellSize+cellPaddingSize/2,
 	)
 }
 
-func (b *board) cellPos(x, y int) point[float32] {
-	return newPoint(
-		b.pos.x+float32(x)*cellSize,
-		b.pos.y+float32(y)*cellSize,
+func (b *Board) cellPos(x, y int) core.Point[float32] {
+	return core.NewPoint(
+		b.pos.X+float32(x)*cellSize,
+		b.pos.Y+float32(y)*cellSize,
 	)
 }
 
-func (b *board) cellOn(p point[float32]) (int, int, bool) {
-	p = p.sub(b.pos.add(newPoint(cellSize, cellSize)))
+func (b *Board) cellOn(p core.Point[float32]) (int, int, bool) {
+	p = p.Sub(b.pos.Add(core.NewPoint(cellSize, cellSize)))
 
 	for y := 0; y < cellsCount; y++ {
 		for x := 0; x < cellsCount; x++ {
-			cp := newPoint(float32(x)*cellSize, float32(y)*cellSize)
-			if cp.x <= p.x && p.x <= cp.x+cellSize &&
-				cp.y <= p.y && p.y <= cp.y+cellSize {
+			cp := core.NewPoint(float32(x)*cellSize, float32(y)*cellSize)
+			if cp.X <= p.X && p.X <= cp.X+cellSize &&
+				cp.Y <= p.Y && p.Y <= cp.Y+cellSize {
 				return x, y, true
 			}
 		}
@@ -180,7 +183,7 @@ func (b *board) cellOn(p point[float32]) (int, int, bool) {
 	return -1, -1, false
 }
 
-func (b *board) shoot(x, y int) bool {
+func (b *Board) shoot(x, y int) bool {
 	switch b.cells[y][x] {
 	case cellEmpty:
 		b.cells[y][x] = cellMiss
@@ -193,7 +196,7 @@ func (b *board) shoot(x, y int) bool {
 	return false
 }
 
-func (b *board) placeShip(x, y int) {
+func (b *Board) placeShip(x, y int) {
 	if b.cells[y][x] != cellEmpty {
 		return
 	}
@@ -247,7 +250,7 @@ func (b *board) placeShip(x, y int) {
 	b.cells[y][x] = cellShip
 }
 
-func (b *board) removeShip(x, y int) {
+func (b *Board) removeShip(x, y int) {
 	if b.cells[y][x] != cellShip {
 		return
 	}
@@ -255,11 +258,11 @@ func (b *board) removeShip(x, y int) {
 	b.cells[y][x] = cellEmpty
 }
 
-func (b *board) at(x, y int) cellKind {
+func (b *Board) at(x, y int) cellKind {
 	return b.cells[y][x]
 }
 
-func (b *board) highlightCell(screen *ebiten.Image, x, y int) {
+func (b *Board) highlightCell(screen *ebiten.Image, x, y int) {
 	pos := b.cellPos(x+1, y+1)
-	vector.StrokeRect(screen, pos.x, pos.y, cellSize, cellSize, 4, highlightColor)
+	vector.StrokeRect(screen, pos.X, pos.Y, cellSize, cellSize, 4, ui.HighlightColor)
 }

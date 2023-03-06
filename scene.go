@@ -57,17 +57,17 @@ func (g *Game) InitScenes() {
 				g.exitBtn.EnableAndShow()
 			},
 			OnUpdate: func() {
-				if g.newGameBtn.clicked {
+				if g.newGameBtn.Clicked() {
 					g.ChangeScene(SceneNewGame)
 					return
 				}
 
-				if g.joinGameBtn.clicked {
+				if g.joinGameBtn.Clicked() {
 					g.ChangeScene(SceneJoinGame)
 					return
 				}
 
-				if g.exitBtn.clicked {
+				if g.exitBtn.Clicked() {
 					g.exit = true
 				}
 			},
@@ -237,13 +237,13 @@ func (g *Game) InitScenes() {
 					}
 				}
 
-				if g.clearBoardBtn.clicked {
+				if g.clearBoardBtn.Clicked() {
 					g.myBoard.cells = [cellsCount][cellsCount]cellKind{}
 				}
 
 				g.readyBtn.SetActive(g.myShipyard.ready())
 
-				if g.readyBtn.clicked {
+				if g.readyBtn.Clicked() {
 					g.ChangeScene(ScenePlayerReady)
 					return
 				}
@@ -268,7 +268,7 @@ func (g *Game) InitScenes() {
 					_ = g.opponentBoard.shoot(g.opponentBoard.hoverX, g.opponentBoard.hoverY)
 				}
 
-				if g.notReadyBtn.clicked {
+				if g.notReadyBtn.Clicked() {
 					g.ChangeScene(ScenePlaceShips)
 				}
 			},

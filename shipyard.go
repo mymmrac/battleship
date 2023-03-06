@@ -7,6 +7,9 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"golang.org/x/image/font"
+
+	"github.com/mymmrac/battleship/core"
+	"github.com/mymmrac/battleship/ui"
 )
 
 // var allowedShips = []int{
@@ -28,18 +31,18 @@ var allowedShips = []int{ // TODO: Remove
 const shipyardBorder = false
 const maxShipyardRowLen = 12 // 24
 
-type shipyard struct {
-	BaseGameObject
+type Shipyard struct {
+	core.BaseGameObject
 
-	pos      point[float32]
-	board    *board
+	pos      core.Point[float32]
+	board    *Board
 	fontFace font.Face
 	ships    []int
 }
 
-func newShipyard(pos point[float32], board *board, fontFace font.Face) *shipyard {
-	return &shipyard{
-		BaseGameObject: NewBaseGameObject(),
+func NewShipyard(pos core.Point[float32], board *Board, fontFace font.Face) *Shipyard {
+	return &Shipyard{
+		BaseGameObject: core.NewBaseGameObject(),
 		pos:            pos,
 		board:          board,
 		fontFace:       fontFace,
@@ -47,11 +50,11 @@ func newShipyard(pos point[float32], board *board, fontFace font.Face) *shipyard
 	}
 }
 
-func (s *shipyard) Update(_ point[float32]) {
+func (s *Shipyard) Update(_ core.Point[float32]) {
 	s.ships = s.shipsCount()
 }
 
-func (s *shipyard) Draw(screen *ebiten.Image) {
+func (s *Shipyard) Draw(screen *ebiten.Image) {
 	longestShip := len(allowedShips)
 
 	// Border
@@ -60,12 +63,12 @@ func (s *shipyard) Draw(screen *ebiten.Image) {
 		rows := float32(math.Ceil(float64(size)/maxShipyardRowLen))*2 - 1
 		vector.StrokeRect(
 			screen,
-			s.pos.x-cellPaddingSize,
-			s.pos.y-cellPaddingSize,
+			s.pos.X-cellPaddingSize,
+			s.pos.Y-cellPaddingSize,
 			(maxShipyardRowLen)*cellSize+cellPaddingSize*2,
 			(rows)*cellSize+cellPaddingSize*2,
 			2,
-			borderColor,
+			ui.BorderColor,
 		)
 	}
 
@@ -80,11 +83,11 @@ func (s *shipyard) Draw(screen *ebiten.Image) {
 		pos := s.innerCellPos(col, row)
 		vector.DrawFilledRect(
 			screen,
-			pos.x,
-			pos.y,
+			pos.X,
+			pos.Y,
 			innerCellSize,
 			innerCellSize,
-			mutedColor,
+			ui.MutedColor,
 		)
 
 		col += y + 1 + 2
@@ -103,13 +106,13 @@ func (s *shipyard) Draw(screen *ebiten.Image) {
 		}
 
 		pos := s.cellPos(col, row)
-		DrawCenteredText(
+		ui.DrawCenteredText(
 			screen,
 			s.fontFace,
 			strconv.Itoa(allowedShips[y]-s.ships[y]),
-			int(pos.x+cellSize/2),
-			int(pos.y+cellSize/2),
-			textDarkColor,
+			int(pos.X+cellSize/2),
+			int(pos.Y+cellSize/2),
+			ui.TextDarkColor,
 		)
 
 		col += y + 1 + 2
@@ -131,11 +134,11 @@ func (s *shipyard) Draw(screen *ebiten.Image) {
 			pos := s.innerCellPos(col+1, row)
 			vector.DrawFilledRect(
 				screen,
-				pos.x,
-				pos.y,
+				pos.X,
+				pos.Y,
 				innerCellSize,
 				innerCellSize,
-				shipColor,
+				ui.ShipColor,
 			)
 
 			col++
@@ -153,21 +156,21 @@ func (s *shipyard) Draw(screen *ebiten.Image) {
 	}
 }
 
-func (s *shipyard) innerCellPos(x, y int) point[float32] {
-	return newPoint(
-		s.pos.x+float32(x)*cellSize+cellPaddingSize/2,
-		s.pos.y+float32(y)*cellSize+cellPaddingSize/2,
+func (s *Shipyard) innerCellPos(x, y int) core.Point[float32] {
+	return core.NewPoint(
+		s.pos.X+float32(x)*cellSize+cellPaddingSize/2,
+		s.pos.Y+float32(y)*cellSize+cellPaddingSize/2,
 	)
 }
 
-func (s *shipyard) cellPos(x, y int) point[float32] {
-	return newPoint(
-		s.pos.x+float32(x)*cellSize,
-		s.pos.y+float32(y)*cellSize,
+func (s *Shipyard) cellPos(x, y int) core.Point[float32] {
+	return core.NewPoint(
+		s.pos.X+float32(x)*cellSize,
+		s.pos.Y+float32(y)*cellSize,
 	)
 }
 
-func (s *shipyard) shipsCount() []int {
+func (s *Shipyard) shipsCount() []int {
 	ships := make([]int, len(allowedShips))
 	visited := [cellsCount][cellsCount]bool{}
 
@@ -205,7 +208,7 @@ func (s *shipyard) shipsCount() []int {
 	return ships
 }
 
-func (s *shipyard) ready() bool {
+func (s *Shipyard) ready() bool {
 	for i, count := range s.ships {
 		if allowedShips[i]-count != 0 {
 			return false

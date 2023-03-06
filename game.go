@@ -10,6 +10,9 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"google.golang.org/grpc"
+
+	"github.com/mymmrac/battleship/core"
+	"github.com/mymmrac/battleship/ui"
 )
 
 const (
@@ -29,18 +32,18 @@ type Game struct {
 	currentScene *Scene
 	scenes       map[SceneID]*Scene
 
-	newGameBtn  *button
-	joinGameBtn *button
-	exitBtn     *button
+	newGameBtn  *ui.Button
+	joinGameBtn *ui.Button
+	exitBtn     *ui.Button
 
-	myBoard    *board
-	myShipyard *shipyard
+	myBoard    *Board
+	myShipyard *Shipyard
 
-	readyBtn      *button
-	notReadyBtn   *button
-	clearBoardBtn *button
+	readyBtn      *ui.Button
+	notReadyBtn   *ui.Button
+	clearBoardBtn *ui.Button
 
-	opponentBoard *board
+	opponentBoard *Board
 
 	objects []GameObject
 }
@@ -65,22 +68,22 @@ func NewGame() (*Game, error) {
 		return nil, err
 	}
 
-	newGameBtn := newButton(newPoint[float32](48, 48), 200, 40, "New Game", buttonFace)
-	joinGameBtn := newButton(newPoint[float32](48, 48+40+32), 200, 40, "Join Game", buttonFace)
-	exitBtn := newButton(newPoint[float32](48, 48+40*2+32*2), 200, 40, "Exit", buttonFace)
+	newGameBtn := ui.NewButton(core.NewPoint[float32](48, 48), 200, 40, "New Game", buttonFace)
+	joinGameBtn := ui.NewButton(core.NewPoint[float32](48, 48+40+32), 200, 40, "Join Game", buttonFace)
+	exitBtn := ui.NewButton(core.NewPoint[float32](48, 48+40*2+32*2), 200, 40, "Exit", buttonFace)
 
 	boardFace, err := loadFace(JetBrainsMonoFont, float64(cellSize)*0.6)
 	if err != nil {
 		return nil, err
 	}
 
-	myBoard := newBoard(newPoint[float32](48, 48), boardFace)
-	myShipyard := newShipyard(newPoint[float32](48, 440), myBoard, boardFace)
-	opponentBoard := newBoard(newPoint[float32](48+400, 48), boardFace)
+	myBoard := NewBoard(core.NewPoint[float32](48, 48), boardFace)
+	myShipyard := NewShipyard(core.NewPoint[float32](48, 440), myBoard, boardFace)
+	opponentBoard := NewBoard(core.NewPoint[float32](48+400, 48), boardFace)
 
-	readyBtn := newButton(newPoint[float32](48, 570), 120, 40, "Ready", buttonFace)
-	notReadyBtn := newButton(newPoint[float32](48, 570), 160, 40, "Not Ready", buttonFace)
-	clearBoardBtn := newButton(newPoint[float32](48+120+32, 570), 120, 40, "Clear", buttonFace)
+	readyBtn := ui.NewButton(core.NewPoint[float32](48, 570), 120, 40, "Ready", buttonFace)
+	notReadyBtn := ui.NewButton(core.NewPoint[float32](48, 570), 160, 40, "Not Ready", buttonFace)
+	clearBoardBtn := ui.NewButton(core.NewPoint[float32](48+120+32, 570), 120, 40, "Clear", buttonFace)
 
 	GlobalGameObjects.Acquire()
 	defer GlobalGameObjects.Release()
@@ -127,7 +130,7 @@ func (g *Game) Update() error {
 	}
 
 	cx, cy := ebiten.CursorPosition()
-	cp := newPoint(float32(cx), float32(cy))
+	cp := core.NewPoint(float32(cx), float32(cy))
 
 	cursorPointer := false
 
