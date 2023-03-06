@@ -18,6 +18,7 @@ type EventManagerServer struct {
 type BattleshipConnector interface {
 	StartNewGame() error
 	StopGame() error
+	WaitForConnection() error
 
 	JoinGame() error
 	ExitGame() error
@@ -45,8 +46,6 @@ const grpcAddr = "127.0.0.1"
 
 func (c *Connector) StartNewGame() error {
 	c.grpcServer = grpc.NewServer()
-
-	c.eventManagerServer = &EventManagerServer{}
 	api.RegisterEventManagerServer(c.grpcServer, c.eventManagerServer)
 
 	l, err := net.Listen("tcp", ":"+grpcPort)
@@ -65,6 +64,10 @@ func (c *Connector) StartNewGame() error {
 
 func (c *Connector) StopGame() error {
 	c.grpcServer.GracefulStop()
+	return nil
+}
+
+func (c *Connector) WaitForConnection() error {
 	return nil
 }
 

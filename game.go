@@ -20,8 +20,8 @@ type Game struct {
 	debug bool
 	exit  bool
 
-	server BattleshipConnector
-	events chan Event
+	connector BattleshipConnector
+	events    chan Event
 
 	currentScene *Scene
 	scenes       map[SceneID]*Scene
@@ -85,8 +85,8 @@ func NewGame() (*Game, error) {
 	game := &Game{
 		debug: false,
 
-		server: NewConnector(),
-		events: make(chan Event),
+		connector: NewConnector(),
+		events:    make(chan Event),
 
 		newGameBtn:  RegisterObject(newGameBtn),
 		joinGameBtn: RegisterObject(joinGameBtn),

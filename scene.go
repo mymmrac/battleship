@@ -76,7 +76,7 @@ func (g *Game) InitScenes() {
 		sceneNewGame: {
 			OnEnter: func() {
 				go func() {
-					err := g.server.StartNewGame()
+					err := g.connector.StartNewGame()
 					if err != nil {
 						g.events <- NewEventError(EventNewGameStartFailed, err)
 						return
@@ -93,6 +93,21 @@ func (g *Game) InitScenes() {
 
 				switch event.EventType() {
 				case EventNewGameStarted:
+					go func() {
+						err := g.connector.WaitForConnection()
+						if err != nil {
+							g.events <- NewEventError(EventJoinGameFailed, err)
+							return
+						}
+
+						g.events <- NewEventSignal(EventJoinedGame)
+					}()
+
+					// TODO: Make separate scene
+					// g.ChangeScene(scenePlaceShips)
+					// return
+
+				case EventJoinedGame:
 					g.ChangeScene(scenePlaceShips)
 					return
 				case EventNewGameStartFailed:
@@ -110,7 +125,7 @@ func (g *Game) InitScenes() {
 		sceneJoinGame: {
 			OnEnter: func() {
 				go func() {
-					err := g.server.JoinGame()
+					err := g.connector.JoinGame()
 					if err != nil {
 						g.events <- NewEventError(EventJoinGameFailed, err)
 						return
