@@ -4,6 +4,7 @@ type GameEventType int
 
 const (
 	GameEventNone GameEventType = iota
+	GameEventFromServer
 	GameEventNewGameStarted
 	GameEventNewGameStartFailed
 	GameEventJoinedGame
@@ -15,31 +16,31 @@ type GameEvent interface {
 }
 
 type GameEventError struct {
-	eventType GameEventType
-	err       error
+	Type GameEventType
+	Err  error
 }
 
 func NewGameEventError(eventType GameEventType, err error) GameEventError {
 	return GameEventError{
-		eventType: eventType,
-		err:       err,
+		Type: eventType,
+		Err:  err,
 	}
 }
 
 func (e GameEventError) EventType() GameEventType {
-	return e.eventType
+	return e.Type
 }
 
 type GameEventSignal struct {
-	eventType GameEventType
+	Type GameEventType
 }
 
 func NewGameEventSignal(eventType GameEventType) GameEventSignal {
 	return GameEventSignal{
-		eventType: eventType,
+		Type: eventType,
 	}
 }
 
 func (e GameEventSignal) EventType() GameEventType {
-	return e.eventType
+	return e.Type
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -102,6 +103,12 @@ func (g *Game) InitScenes() {
 					}
 
 					g.events <- NewGameEventSignal(GameEventNewGameStarted)
+
+					// TODO: Move to separate place
+					err = g.eventManager.HandleGameEvents(g.events)
+					if err != nil {
+						panic(err)
+					}
 				}()
 			},
 			OnUpdate: func() {
@@ -120,10 +127,23 @@ func (g *Game) InitScenes() {
 					// TODO: Make separate scene
 					// g.ChangeScene(sceneWaitForPlayer)
 					// return
+				case GameEventFromServer:
+					serverEvent := event.(ServerEvent)
 
+					var signalEvent GameEventSignal
+					err := json.Unmarshal(serverEvent.Data, &signalEvent)
+					if err != nil {
+						fmt.Println(err) // TODO: Fix me
+						return
+					}
+
+					if signalEvent.Type == GameEventJoinedGame {
+						g.ChangeScene(ScenePlaceShips)
+						return
+					}
 				case GameEventNewGameStartFailed:
 					errEvent := event.(GameEventError)
-					fmt.Println(errEvent.err) // TODO: Fix me
+					fmt.Println(errEvent.Err) // TODO: Fix me
 					g.ChangeScene(SceneMenu)
 					return
 				default:
@@ -164,6 +184,12 @@ func (g *Game) InitScenes() {
 					}
 
 					g.events <- NewGameEventSignal(GameEventJoinedGame)
+
+					// TODO: Move to separate place
+					err = g.eventManager.HandleGameEvents(g.events)
+					if err != nil {
+						panic(err)
+					}
 				}()
 			},
 			OnUpdate: func() {
@@ -181,7 +207,7 @@ func (g *Game) InitScenes() {
 					return
 				case GameEventJoinGameFailed:
 					errEvent := event.(GameEventError)
-					fmt.Println(errEvent.err) // TODO: Fix me
+					fmt.Println(errEvent.Err) // TODO: Fix me
 					g.ChangeScene(SceneMenu)
 					return
 				default:

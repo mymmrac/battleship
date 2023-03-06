@@ -28,6 +28,10 @@ type ServerEvent struct {
 	Data []byte
 }
 
+func (e ServerEvent) EventType() GameEventType {
+	return GameEventFromServer
+}
+
 func ServerEventFromGRPC(grpcEvent *api.Event) ServerEvent {
 	return ServerEvent{
 		Type: ServerEventType(grpcEvent.Type),
@@ -124,14 +128,28 @@ func (e *EventManagerServer) Events(stream api.EventManager_EventsServer) error 
 				return err
 			}
 
-			e.games[event.From] = e.games[gameID]
+			game := e.games[gameID]
+			e.games[event.From] = game
 
 			player := Player{
 				ID:     event.From,
 				Events: make(chan ServerEvent),
 			}
-			e.games[gameID].playerB = player
+			game.playerB = player
 			go player.HandleEvents(stream)
+
+			gameEvent := GameEventSignal{Type: GameEventJoinedGame}
+			var data []byte
+			data, err = json.Marshal(gameEvent)
+			if err != nil {
+				return err
+			}
+
+			game.playerA.Events <- ServerEvent{
+				Type: ServerEventGameEvent,
+				From: uuid.Nil,
+				Data: data,
+			}
 		case ServerEventGameEvent:
 			game := e.games[event.From]
 
@@ -203,4 +221,21 @@ func (c *EventManagerClient) JoinGame(gameID uuid.UUID) error {
 		From: c.playerID,
 		Data: gameID[:],
 	}.ToGRPC())
+}
+
+func (c *EventManagerClient) HandleGameEvents(events chan<- GameEvent) error {
+	for {
+		grpcEvent, err := c.stream.Recv()
+		if err != nil {
+			return err
+		}
+
+		serverEvent := ServerEventFromGRPC(grpcEvent)
+
+		if serverEvent.Type != ServerEventGameEvent {
+			return errors.New("unexpected event type: " + strconv.Itoa(int(serverEvent.Type)))
+		}
+
+		events <- serverEvent
+	}
 }
