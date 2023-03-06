@@ -1,45 +1,45 @@
 package main
 
-type EventType int
+type GameEventType int
 
 const (
-	EventNone EventType = iota
-	EventNewGameStarted
-	EventNewGameStartFailed
-	EventJoinedGame
-	EventJoinGameFailed
+	GameEventNone GameEventType = iota
+	GameEventNewGameStarted
+	GameEventNewGameStartFailed
+	GameEventJoinedGame
+	GameEventJoinGameFailed
 )
 
-type Event interface {
-	EventType() EventType
+type GameEvent interface {
+	EventType() GameEventType
 }
 
-type EventError struct {
-	eventType EventType
+type GameEventError struct {
+	eventType GameEventType
 	err       error
 }
 
-func NewEventError(eventType EventType, err error) EventError {
-	return EventError{
+func NewGameEventError(eventType GameEventType, err error) GameEventError {
+	return GameEventError{
 		eventType: eventType,
 		err:       err,
 	}
 }
 
-func (e EventError) EventType() EventType {
+func (e GameEventError) EventType() GameEventType {
 	return e.eventType
 }
 
-type EventSignal struct {
-	eventType EventType
+type GameEventSignal struct {
+	eventType GameEventType
 }
 
-func NewEventSignal(eventType EventType) EventSignal {
-	return EventSignal{
+func NewGameEventSignal(eventType GameEventType) GameEventSignal {
+	return GameEventSignal{
 		eventType: eventType,
 	}
 }
 
-func (e EventSignal) EventType() EventType {
+func (e GameEventSignal) EventType() GameEventType {
 	return e.eventType
 }

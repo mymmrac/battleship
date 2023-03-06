@@ -15,12 +15,12 @@ import (
 type SceneID int
 
 const (
-	sceneNone SceneID = iota
-	sceneMenu
-	sceneNewGame
-	sceneJoinGame
-	scenePlaceShips
-	scenePlayerReady
+	SceneNone SceneID = iota
+	SceneMenu
+	SceneNewGame
+	SceneJoinGame
+	ScenePlaceShips
+	ScenePlayerReady
 )
 
 type Scene struct {
@@ -49,7 +49,7 @@ func (g *Game) ChangeScene(id SceneID) {
 
 func (g *Game) InitScenes() {
 	scenes := map[SceneID]*Scene{
-		sceneMenu: {
+		SceneMenu: {
 			OnEnter: func() {
 				g.newGameBtn.EnableAndShow()
 				g.joinGameBtn.EnableAndShow()
@@ -57,12 +57,12 @@ func (g *Game) InitScenes() {
 			},
 			OnUpdate: func() {
 				if g.newGameBtn.clicked {
-					g.ChangeScene(sceneNewGame)
+					g.ChangeScene(SceneNewGame)
 					return
 				}
 
 				if g.joinGameBtn.clicked {
-					g.ChangeScene(sceneJoinGame)
+					g.ChangeScene(SceneJoinGame)
 					return
 				}
 
@@ -77,35 +77,35 @@ func (g *Game) InitScenes() {
 			},
 		},
 
-		sceneNewGame: {
+		SceneNewGame: {
 			OnEnter: func() {
 				go func() {
 					var err error
 					// TODO: Close connection
 					g.grpcConn, err = grpc.Dial(grpcAddr+":"+grpcPort, grpc.WithTransportCredentials(insecure.NewCredentials()))
 					if err != nil {
-						g.events <- NewEventError(EventNewGameStartFailed, err)
+						g.events <- NewGameEventError(GameEventNewGameStartFailed, err)
 						return
 					}
 
 					client := api.NewEventManagerClient(g.grpcConn)
 					g.eventManager, err = NewEventManagerClient(client)
 					if err != nil {
-						g.events <- NewEventError(EventNewGameStartFailed, err)
+						g.events <- NewGameEventError(GameEventNewGameStartFailed, err)
 						return
 					}
 
 					err = g.eventManager.NewGame()
 					if err != nil {
-						g.events <- NewEventError(EventNewGameStartFailed, err)
+						g.events <- NewGameEventError(GameEventNewGameStartFailed, err)
 						return
 					}
 
-					g.events <- NewEventSignal(EventNewGameStarted)
+					g.events <- NewGameEventSignal(GameEventNewGameStarted)
 				}()
 			},
 			OnUpdate: func() {
-				var event Event
+				var event GameEvent
 				select {
 				case event = <-g.events:
 				// Pass
@@ -114,17 +114,17 @@ func (g *Game) InitScenes() {
 				}
 
 				switch event.EventType() {
-				case EventNewGameStarted:
+				case GameEventNewGameStarted:
 					fmt.Println("NEW GAME")
 
 					// TODO: Make separate scene
 					// g.ChangeScene(sceneWaitForPlayer)
 					// return
 
-				case EventNewGameStartFailed:
-					errEvent := event.(EventError)
+				case GameEventNewGameStartFailed:
+					errEvent := event.(GameEventError)
 					fmt.Println(errEvent.err) // TODO: Fix me
-					g.ChangeScene(sceneMenu)
+					g.ChangeScene(SceneMenu)
 					return
 				default:
 					panic("unexpected event type: " + strconv.Itoa(int(event.EventType())))
@@ -133,41 +133,41 @@ func (g *Game) InitScenes() {
 			OnLeave: nil,
 		},
 
-		sceneJoinGame: {
+		SceneJoinGame: {
 			OnEnter: func() {
 				go func() {
 					var err error
 					// TODO: Close connection
 					g.grpcConn, err = grpc.Dial(grpcAddr+":"+grpcPort, grpc.WithTransportCredentials(insecure.NewCredentials()))
 					if err != nil {
-						g.events <- NewEventError(EventJoinGameFailed, err)
+						g.events <- NewGameEventError(GameEventJoinGameFailed, err)
 						return
 					}
 
 					client := api.NewEventManagerClient(g.grpcConn)
 					g.eventManager, err = NewEventManagerClient(client)
 					if err != nil {
-						g.events <- NewEventError(EventJoinGameFailed, err)
+						g.events <- NewGameEventError(GameEventJoinGameFailed, err)
 						return
 					}
 
 					games, err := g.eventManager.ListGames()
 					if err != nil {
-						g.events <- NewEventError(EventJoinGameFailed, err)
+						g.events <- NewGameEventError(GameEventJoinGameFailed, err)
 						return
 					}
 
 					err = g.eventManager.JoinGame(games[0])
 					if err != nil {
-						g.events <- NewEventError(EventJoinGameFailed, err)
+						g.events <- NewGameEventError(GameEventJoinGameFailed, err)
 						return
 					}
 
-					g.events <- NewEventSignal(EventJoinedGame)
+					g.events <- NewGameEventSignal(GameEventJoinedGame)
 				}()
 			},
 			OnUpdate: func() {
-				var event Event
+				var event GameEvent
 				select {
 				case event = <-g.events:
 				// Pass
@@ -176,13 +176,13 @@ func (g *Game) InitScenes() {
 				}
 
 				switch event.EventType() {
-				case EventJoinedGame:
-					g.ChangeScene(scenePlaceShips)
+				case GameEventJoinedGame:
+					g.ChangeScene(ScenePlaceShips)
 					return
-				case EventJoinGameFailed:
-					errEvent := event.(EventError)
+				case GameEventJoinGameFailed:
+					errEvent := event.(GameEventError)
 					fmt.Println(errEvent.err) // TODO: Fix me
-					g.ChangeScene(sceneMenu)
+					g.ChangeScene(SceneMenu)
 					return
 				default:
 					panic("unexpected event type: " + strconv.Itoa(int(event.EventType())))
@@ -191,7 +191,7 @@ func (g *Game) InitScenes() {
 			OnLeave: nil,
 		},
 
-		scenePlaceShips: {
+		ScenePlaceShips: {
 			OnEnter: func() {
 				g.myBoard.EnableAndShow()
 				g.myShipyard.EnableAndShow()
@@ -218,7 +218,7 @@ func (g *Game) InitScenes() {
 				g.readyBtn.SetActive(g.myShipyard.ready())
 
 				if g.readyBtn.clicked {
-					g.ChangeScene(scenePlayerReady)
+					g.ChangeScene(ScenePlayerReady)
 					return
 				}
 			},
@@ -230,7 +230,7 @@ func (g *Game) InitScenes() {
 			},
 		},
 
-		scenePlayerReady: {
+		ScenePlayerReady: {
 			OnEnter: func() {
 				g.myBoard.Show()
 				g.opponentBoard.EnableAndShow()
@@ -243,7 +243,7 @@ func (g *Game) InitScenes() {
 				}
 
 				if g.notReadyBtn.clicked {
-					g.ChangeScene(scenePlaceShips)
+					g.ChangeScene(ScenePlaceShips)
 				}
 			},
 			OnLeave: func() {

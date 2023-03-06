@@ -24,8 +24,7 @@ type Game struct {
 	grpcConn     *grpc.ClientConn
 	eventManager *EventManagerClient
 
-	connector BattleshipConnector
-	events    chan Event
+	events chan GameEvent
 
 	currentScene *Scene
 	scenes       map[SceneID]*Scene
@@ -89,8 +88,7 @@ func NewGame() (*Game, error) {
 	game := &Game{
 		debug: false,
 
-		connector: NewConnector(),
-		events:    make(chan Event),
+		events: make(chan GameEvent),
 
 		newGameBtn:  RegisterObject(newGameBtn),
 		joinGameBtn: RegisterObject(joinGameBtn),
@@ -109,7 +107,7 @@ func NewGame() (*Game, error) {
 	}
 
 	game.InitScenes()
-	game.currentScene = game.scenes[sceneMenu]
+	game.currentScene = game.scenes[SceneMenu]
 	game.currentScene.OnEnter()
 
 	return game, nil
