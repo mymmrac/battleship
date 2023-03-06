@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"image"
 	"image/color"
 	"math"
 
@@ -75,6 +76,20 @@ func NewGame(serverAddr, serverPort string) (*Game, error) {
 		int(math.Ceil((float64(screenWidth)-windowWidth)/2.0)),
 		int(math.Ceil((float64(screenHeight)-windowHeight)/2.0)),
 	)
+
+	i16, err := LoadImage(Icon16x16)
+	if err != nil {
+		return nil, err
+	}
+	i32, err := LoadImage(Icon32x32)
+	if err != nil {
+		return nil, err
+	}
+	i48, err := LoadImage(Icon48x48)
+	if err != nil {
+		return nil, err
+	}
+	ebiten.SetWindowIcon([]image.Image{i16, i32, i48})
 
 	buttonFace, err := loadFace(JetBrainsMonoFont, 24)
 	if err != nil {
