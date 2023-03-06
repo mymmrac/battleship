@@ -23,6 +23,7 @@ const (
 	SceneJoinGame
 	ScenePlaceShips
 	ScenePlayerReady
+	SceneTheGame
 )
 
 type Scene struct {
@@ -276,9 +277,11 @@ func (g *Game) InitScenes() {
 					}
 
 					if signalEvent.Type == GameEventPlayerReady {
+						g.opponentReady = true
 						g.opponentReadyLabel.SetText("Opponent: ready")
 						return
 					} else if signalEvent.Type == GameEventPlayerNotReady {
+						g.opponentReady = false
 						g.opponentReadyLabel.SetText("Opponent: not ready")
 						return
 					}
@@ -306,14 +309,14 @@ func (g *Game) InitScenes() {
 				}()
 
 				g.myBoard.Show()
-				g.opponentBoard.EnableAndShow()
 				g.notReadyBtn.EnableAndShow()
 				g.clearBoardBtn.DisableAndHide()
 				g.opponentReadyLabel.Show()
 			},
 			OnUpdate: func() {
-				if g.opponentBoard.hover && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-					_ = g.opponentBoard.shoot(g.opponentBoard.hoverX, g.opponentBoard.hoverY)
+				if g.opponentReady {
+					g.ChangeScene(SceneTheGame)
+					return
 				}
 
 				if g.notReadyBtn.Clicked() {
@@ -328,10 +331,6 @@ func (g *Game) InitScenes() {
 					return
 				}
 
-				// if opponentReady {
-				// // TODO: Start game
-				// }
-
 				switch event.EventType() {
 				case GameEventFromServer:
 					serverEvent := event.(ServerEvent)
@@ -344,10 +343,8 @@ func (g *Game) InitScenes() {
 					}
 
 					if signalEvent.Type == GameEventPlayerReady {
-						g.opponentReadyLabel.SetText("Opponent: ready")
-						return // TODO: Start game
-					} else if signalEvent.Type == GameEventPlayerNotReady {
-						g.opponentReadyLabel.SetText("Opponent: not ready")
+						g.opponentReady = true
+						g.ChangeScene(SceneTheGame)
 						return
 					}
 				default:
@@ -356,17 +353,36 @@ func (g *Game) InitScenes() {
 			},
 			OnLeave: func() {
 				g.myBoard.DisableAndHide()
-				g.opponentBoard.DisableAndHide()
 				g.notReadyBtn.DisableAndHide()
 				g.opponentReadyLabel.Hide()
 
 				go func() {
+					if g.opponentReady {
+						return
+					}
+
 					err := g.eventManager.SendGameEvent(NewGameEventSignal(GameEventPlayerNotReady))
 					if err != nil {
 						fmt.Println(err) // TODO: Fix me
 						return
 					}
 				}()
+			},
+		},
+
+		SceneTheGame: {
+			OnEnter: func() {
+				g.myBoard.Show()
+				g.opponentBoard.EnableAndShow()
+			},
+			OnUpdate: func() {
+				if g.opponentBoard.hover && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+					_ = g.opponentBoard.shoot(g.opponentBoard.hoverX, g.opponentBoard.hoverY)
+				}
+			},
+			OnLeave: func() {
+				g.myBoard.DisableAndHide()
+				g.opponentBoard.DisableAndHide()
 			},
 		},
 	}

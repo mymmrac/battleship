@@ -41,9 +41,11 @@ type Game struct {
 	myBoard    *Board
 	myShipyard *Shipyard
 
-	readyBtn           *ui.Button
-	notReadyBtn        *ui.Button
-	clearBoardBtn      *ui.Button
+	readyBtn      *ui.Button
+	notReadyBtn   *ui.Button
+	clearBoardBtn *ui.Button
+
+	opponentReady      bool
 	opponentReadyLabel *ui.Label
 
 	opponentBoard *Board
