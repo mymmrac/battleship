@@ -2,11 +2,13 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/google/uuid"
-	"google.golang.org/grpc"
 
 	"github.com/mymmrac/battleship/api"
 )
@@ -144,6 +146,55 @@ func (e *EventManagerServer) Events(stream api.EventManager_EventsServer) error 
 }
 
 type EventManagerClient struct {
-	grpcConn     *grpc.ClientConn
-	eventManager api.EventManagerClient
+	playerID uuid.UUID
+	stream   api.EventManager_EventsClient
+}
+
+func NewEventManagerClient(eventManager api.EventManagerClient) (*EventManagerClient, error) {
+	stream, err := eventManager.Events(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	return &EventManagerClient{
+		playerID: uuid.New(),
+		stream:   stream,
+	}, nil
+}
+
+func (c *EventManagerClient) NewGame() error {
+	return c.stream.Send(ServerEvent{
+		Type: ServerEventNewGame,
+		From: c.playerID,
+		Data: nil,
+	}.ToGRPC())
+}
+
+func (c *EventManagerClient) ListGames() ([]uuid.UUID, error) {
+	err := c.stream.Send(ServerEvent{
+		Type: ServerEventListGames,
+		From: c.playerID,
+		Data: nil,
+	}.ToGRPC())
+	if err != nil {
+		return nil, err
+	}
+
+	grpcEvent, err := c.stream.Recv()
+	if err != nil {
+		return nil, err
+	}
+
+	event := ServerEventFromGRPC(grpcEvent)
+	if event.Type != ServerEventListGames {
+		return nil, errors.New("unexpected response event: " + strconv.Itoa(int(event.Type)))
+	}
+
+	var games []uuid.UUID
+	err = binary.Read(bytes.NewReader(event.Data), binary.BigEndian, &games)
+	if err != nil {
+		return nil, err
+	}
+
+	return games, nil
 }
