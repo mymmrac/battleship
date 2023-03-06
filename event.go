@@ -3,7 +3,7 @@ package main
 type GameEventType int
 
 const (
-	GameEventNone GameEventType = iota
+	_ GameEventType = iota
 	GameEventFromServer
 	GameEventNewGameStarted
 	GameEventNewGameStartFailed

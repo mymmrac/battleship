@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -16,7 +17,7 @@ import (
 type SceneID int
 
 const (
-	SceneNone SceneID = iota
+	_ SceneID = iota
 	SceneMenu
 	SceneNewGame
 	SceneJoinGame
@@ -80,6 +81,9 @@ func (g *Game) InitScenes() {
 
 		SceneNewGame: {
 			OnEnter: func() {
+				g.newGameLoadingLabel.Show()
+				g.newGameLoadingLabel.SetText("Creating new game...")
+
 				go func() {
 					var err error
 					// TODO: Close connection
@@ -102,6 +106,7 @@ func (g *Game) InitScenes() {
 						return
 					}
 
+					time.Sleep(time.Second)
 					g.events <- NewGameEventSignal(GameEventNewGameStarted)
 
 					// TODO: Move to separate place
@@ -122,7 +127,7 @@ func (g *Game) InitScenes() {
 
 				switch event.EventType() {
 				case GameEventNewGameStarted:
-					fmt.Println("NEW GAME")
+					g.newGameLoadingLabel.SetText("Waiting for other player to join...")
 
 					// TODO: Make separate scene
 					// g.ChangeScene(sceneWaitForPlayer)
@@ -150,7 +155,9 @@ func (g *Game) InitScenes() {
 					panic("unexpected event type: " + strconv.Itoa(int(event.EventType())))
 				}
 			},
-			OnLeave: nil,
+			OnLeave: func() {
+				g.newGameLoadingLabel.Hide()
+			},
 		},
 
 		SceneJoinGame: {

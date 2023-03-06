@@ -36,6 +36,8 @@ type Game struct {
 	joinGameBtn *ui.Button
 	exitBtn     *ui.Button
 
+	newGameLoadingLabel *ui.Label
+
 	myBoard    *Board
 	myShipyard *Shipyard
 
@@ -68,9 +70,17 @@ func NewGame() (*Game, error) {
 		return nil, err
 	}
 
+	labelFace, err := loadFace(JetBrainsMonoFont, 32)
+	if err != nil {
+		return nil, err
+	}
+
 	newGameBtn := ui.NewButton(core.NewPoint[float32](48, 48), 200, 40, "New Game", buttonFace)
 	joinGameBtn := ui.NewButton(core.NewPoint[float32](48, 48+40+32), 200, 40, "Join Game", buttonFace)
 	exitBtn := ui.NewButton(core.NewPoint[float32](48, 48+40*2+32*2), 200, 40, "Exit", buttonFace)
+
+	newGameLoadingLabel := ui.NewLabel(core.NewPoint[float32](48, 48), "", labelFace)
+	newGameLoadingLabel.SetAlignment(ui.LabelAlignmentTopLeft)
 
 	boardFace, err := loadFace(JetBrainsMonoFont, float64(cellSize)*0.6)
 	if err != nil {
@@ -96,6 +106,8 @@ func NewGame() (*Game, error) {
 		newGameBtn:  RegisterObject(newGameBtn),
 		joinGameBtn: RegisterObject(joinGameBtn),
 		exitBtn:     RegisterObject(exitBtn),
+
+		newGameLoadingLabel: RegisterObject(newGameLoadingLabel),
 
 		myBoard:    RegisterObject(myBoard),
 		myShipyard: RegisterObject(myShipyard),

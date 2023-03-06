@@ -15,7 +15,7 @@ import (
 type ServerEventType int
 
 const (
-	ServerEventNone ServerEventType = iota
+	_ ServerEventType = iota
 	ServerEventNewGame
 	ServerEventListGames
 	ServerEventJoinGame
