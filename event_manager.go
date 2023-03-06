@@ -53,7 +53,7 @@ type Player struct {
 	Events chan ServerEvent
 }
 
-func (p Player) HandleEvents(stream api.EventManager_EventsServer) {
+func (p *Player) HandleEvents(stream api.EventManager_EventsServer) {
 	for event := range p.Events {
 		err := stream.Send(event.ToGRPC())
 		if err != nil {
@@ -63,8 +63,8 @@ func (p Player) HandleEvents(stream api.EventManager_EventsServer) {
 }
 
 type MultiplayerGame struct {
-	playerA Player
-	playerB Player
+	playerA *Player
+	playerB *Player
 }
 
 type EventManagerServer struct {
@@ -91,7 +91,7 @@ func (e *EventManagerServer) Events(stream api.EventManager_EventsServer) error 
 
 		switch event.Type {
 		case ServerEventNewGame:
-			player := Player{
+			player := &Player{
 				ID:     event.From,
 				Events: make(chan ServerEvent),
 			}
@@ -102,7 +102,7 @@ func (e *EventManagerServer) Events(stream api.EventManager_EventsServer) error 
 		case ServerEventListGames:
 			games := make([]uuid.UUID, 0, len(e.games))
 			for id, g := range e.games {
-				if id == g.playerA.ID {
+				if g.playerB == nil && id == g.playerA.ID {
 					games = append(games, g.playerA.ID)
 				}
 			}
@@ -131,7 +131,7 @@ func (e *EventManagerServer) Events(stream api.EventManager_EventsServer) error 
 			game := e.games[gameID]
 			e.games[event.From] = game
 
-			player := Player{
+			player := &Player{
 				ID:     event.From,
 				Events: make(chan ServerEvent),
 			}
