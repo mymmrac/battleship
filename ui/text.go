@@ -8,22 +8,32 @@ import (
 	"golang.org/x/image/font"
 )
 
-func DrawCenteredText(screen *ebiten.Image, font font.Face, s string, cx, cy int, clr color.Color) {
+func DrawCenteredText(screen *ebiten.Image, font font.Face, s string, px, py int, clr color.Color) {
 	if len(s) == 0 {
 		return
 	}
 
 	bounds := text.BoundString(font, s)
-	x, y := cx-bounds.Min.X-bounds.Dx()/2, cy-bounds.Min.Y-bounds.Dy()/2
+	x, y := px-bounds.Min.X-bounds.Dx()/2, py-bounds.Min.Y-bounds.Dy()/2
 	text.Draw(screen, s, font, x, y, clr)
 }
 
-func DrawTopLeftText(screen *ebiten.Image, font font.Face, s string, lx, ly int, clr color.Color) {
+func DrawTopLeftText(screen *ebiten.Image, font font.Face, s string, px, py int, clr color.Color) {
 	if len(s) == 0 {
 		return
 	}
 
 	bounds := text.BoundString(font, s)
-	x, y := lx-bounds.Min.X, ly-bounds.Min.Y
+	x, y := px-bounds.Min.X, py-bounds.Min.Y
+	text.Draw(screen, s, font, x, y, clr)
+}
+
+func DrawTopCenterText(screen *ebiten.Image, font font.Face, s string, px, py int, clr color.Color) {
+	if len(s) == 0 {
+		return
+	}
+
+	bounds := text.BoundString(font, s)
+	x, y := px-bounds.Min.X-bounds.Dx()/2, py-bounds.Min.Y
 	text.Draw(screen, s, font, x, y, clr)
 }

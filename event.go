@@ -1,5 +1,7 @@
 package main
 
+import "github.com/mymmrac/battleship/core"
+
 type GameEventType int
 
 const (
@@ -11,6 +13,10 @@ const (
 	GameEventJoinGameFailed
 	GameEventPlayerReady
 	GameEventPlayerNotReady
+	GameEventShoot
+	GameEventMiss
+	GameEventHit
+	GameEventDestroyed
 )
 
 type GameEvent interface {
@@ -44,5 +50,21 @@ func NewGameEventSignal(eventType GameEventType) GameEventSignal {
 }
 
 func (e GameEventSignal) EventType() GameEventType {
+	return e.Type
+}
+
+type GameEventCoord struct {
+	Type GameEventType
+	Pos  core.Point[int]
+}
+
+func NewGameEventCoord(pos core.Point[int]) GameEventCoord {
+	return GameEventCoord{
+		Type: GameEventShoot,
+		Pos:  pos,
+	}
+}
+
+func (e GameEventCoord) EventType() GameEventType {
 	return e.Type
 }

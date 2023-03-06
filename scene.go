@@ -238,11 +238,11 @@ func (g *Game) InitScenes() {
 			OnUpdate: func() {
 				if g.myBoard.hover {
 					if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-						g.myBoard.placeShip(g.myBoard.hoverX, g.myBoard.hoverY)
+						g.myBoard.placeShip(g.myBoard.hoverPos)
 					}
 
 					if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
-						g.myBoard.removeShip(g.myBoard.hoverX, g.myBoard.hoverY)
+						g.myBoard.removeShip(g.myBoard.hoverPos)
 					}
 				}
 
@@ -315,6 +315,7 @@ func (g *Game) InitScenes() {
 			},
 			OnUpdate: func() {
 				if g.opponentReady {
+					g.playerTurnLabel.SetText("Opponent's Turn")
 					g.ChangeScene(SceneTheGame)
 					return
 				}
@@ -344,6 +345,8 @@ func (g *Game) InitScenes() {
 
 					if signalEvent.Type == GameEventPlayerReady {
 						g.opponentReady = true
+						g.myTurn = true
+						g.playerTurnLabel.SetText("Your Turn")
 						g.ChangeScene(SceneTheGame)
 						return
 					}
@@ -374,15 +377,95 @@ func (g *Game) InitScenes() {
 			OnEnter: func() {
 				g.myBoard.Show()
 				g.opponentBoard.EnableAndShow()
+				g.playerTurnLabel.Show()
 			},
 			OnUpdate: func() {
-				if g.opponentBoard.hover && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-					_ = g.opponentBoard.shoot(g.opponentBoard.hoverX, g.opponentBoard.hoverY)
+				pos := g.opponentBoard.hoverPos
+				if g.myTurn && g.opponentBoard.hover && g.opponentBoard.canShoot(pos) &&
+					inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+					err := g.eventManager.SendGameEvent(NewGameEventCoord(pos))
+					if err != nil {
+						fmt.Println(err) // TODO: Fix me
+						return
+					}
+
+					g.myTurn = false
+					// g.playerTurnLabel.SetText("Opponent's Turn")
+					g.lastShootPos = pos
+				}
+
+				var event GameEvent
+				select {
+				case event = <-g.events:
+				// Pass
+				default:
+					return
+				}
+
+				switch event.EventType() {
+				case GameEventFromServer:
+					serverEvent := event.(ServerEvent)
+
+					var signalEvent GameEventSignal
+					if err := json.Unmarshal(serverEvent.Data, &signalEvent); err != nil {
+						fmt.Println(err) // TODO: Fix me
+						return
+					}
+
+					switch signalEvent.EventType() {
+					case GameEventShoot:
+						var coordEvent GameEventCoord
+						if err := json.Unmarshal(serverEvent.Data, &coordEvent); err != nil {
+							fmt.Println(err) // TODO: Fix me
+							return
+						}
+
+						hit := false
+
+						var sendEvent GameEvent
+						switch g.myBoard.AtPos(coordEvent.Pos) {
+						case cellEmpty:
+							sendEvent = NewGameEventSignal(GameEventMiss)
+							g.myBoard.SetAt(coordEvent.Pos, cellMiss)
+						case cellShip:
+							sendEvent = NewGameEventSignal(GameEventHit)
+							g.myBoard.SetAt(coordEvent.Pos, cellShipHit)
+							hit = true
+							// TODO: Send destroyed
+						}
+
+						go func() {
+							if err := g.eventManager.SendGameEvent(sendEvent); err != nil {
+								fmt.Println(err) // TODO: Fix
+								return
+							}
+						}()
+
+						g.myTurn = !hit
+					case GameEventMiss:
+						g.opponentBoard.SetAt(g.lastShootPos, cellMiss)
+					case GameEventHit:
+						g.opponentBoard.SetAt(g.lastShootPos, cellShipHit)
+						g.myTurn = true
+					case GameEventDestroyed:
+						g.opponentBoard.SetAt(g.lastShootPos, cellShipHit)
+						g.myTurn = true
+						// TODO: Mark all empty spots
+					}
+				default:
+					panic("unexpected event type: " + strconv.Itoa(int(event.EventType())))
+				}
+
+				if g.myTurn {
+					g.playerTurnLabel.SetText("Your Turn")
+				} else {
+					g.playerTurnLabel.SetText("Opponent's Turn")
 				}
 			},
 			OnLeave: func() {
 				g.myBoard.DisableAndHide()
 				g.opponentBoard.DisableAndHide()
+				g.playerTurnLabel.Hide()
 			},
 		},
 	}

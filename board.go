@@ -33,9 +33,8 @@ type Board struct {
 	cells    [cellsCount][cellsCount]cellKind
 	fontFace font.Face
 
-	hover  bool
-	hoverX int
-	hoverY int
+	hover    bool
+	hoverPos core.Point[int]
 }
 
 func NewBoard(pos core.Point[float32], fontFace font.Face) *Board {
@@ -48,7 +47,7 @@ func NewBoard(pos core.Point[float32], fontFace font.Face) *Board {
 }
 
 func (b *Board) Update(cp core.Point[float32]) {
-	b.hoverX, b.hoverY, b.hover = b.cellOn(cp)
+	b.hoverPos.X, b.hoverPos.Y, b.hover = b.cellOn(cp)
 }
 
 func (b *Board) CursorPointer() bool {
@@ -149,7 +148,7 @@ func (b *Board) Draw(screen *ebiten.Image) {
 	}
 
 	if b.hover {
-		b.highlightCell(screen, b.hoverX, b.hoverY)
+		b.highlightCell(screen, b.hoverPos)
 	}
 }
 
@@ -183,20 +182,13 @@ func (b *Board) cellOn(p core.Point[float32]) (int, int, bool) {
 	return -1, -1, false
 }
 
-func (b *Board) shoot(x, y int) bool {
-	switch b.cells[y][x] {
-	case cellEmpty:
-		b.cells[y][x] = cellMiss
-		return true
-	case cellShip:
-		b.cells[y][x] = cellShipHit
-		return true
-	}
-
-	return false
+func (b *Board) canShoot(pos core.Point[int]) bool {
+	return b.cells[pos.Y][pos.X] == cellEmpty
 }
 
-func (b *Board) placeShip(x, y int) {
+func (b *Board) placeShip(pos core.Point[int]) {
+	x, y := pos.X, pos.Y
+
 	if b.cells[y][x] != cellEmpty {
 		return
 	}
@@ -250,19 +242,27 @@ func (b *Board) placeShip(x, y int) {
 	b.cells[y][x] = cellShip
 }
 
-func (b *Board) removeShip(x, y int) {
-	if b.cells[y][x] != cellShip {
+func (b *Board) removeShip(pos core.Point[int]) {
+	if b.cells[pos.Y][pos.X] != cellShip {
 		return
 	}
 
-	b.cells[y][x] = cellEmpty
+	b.cells[pos.Y][pos.X] = cellEmpty
 }
 
-func (b *Board) at(x, y int) cellKind {
+func (b *Board) At(x, y int) cellKind {
 	return b.cells[y][x]
 }
 
-func (b *Board) highlightCell(screen *ebiten.Image, x, y int) {
-	pos := b.cellPos(x+1, y+1)
+func (b *Board) AtPos(pos core.Point[int]) cellKind {
+	return b.cells[pos.Y][pos.X]
+}
+
+func (b *Board) highlightCell(screen *ebiten.Image, boardPos core.Point[int]) {
+	pos := b.cellPos(boardPos.X+1, boardPos.Y+1)
 	vector.StrokeRect(screen, pos.X, pos.Y, cellSize, cellSize, 4, ui.HighlightColor)
+}
+
+func (b *Board) SetAt(pos core.Point[int], kind cellKind) {
+	b.cells[pos.Y][pos.X] = kind
 }

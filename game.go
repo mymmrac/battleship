@@ -48,7 +48,10 @@ type Game struct {
 	opponentReady      bool
 	opponentReadyLabel *ui.Label
 
-	opponentBoard *Board
+	myTurn          bool
+	lastShootPos    core.Point[int]
+	playerTurnLabel *ui.Label
+	opponentBoard   *Board
 
 	objects []GameObject
 }
@@ -98,6 +101,9 @@ func NewGame() (*Game, error) {
 	clearBoardBtn := ui.NewButton(core.NewPoint[float32](48+120+32, 570), 120, 40, "Clear", buttonFace)
 	opponentReadyLabel := ui.NewLabel(core.NewPoint[float32](48, 640), "Opponent: not ready", labelFace)
 
+	playerTurnLabel := ui.NewLabel(core.NewPoint[float32](48+400+48/2, 400), "...", labelFace)
+	playerTurnLabel.SetAlignment(ui.LabelAlignmentTopCenter)
+
 	GlobalGameObjects.Acquire()
 	defer GlobalGameObjects.Release()
 
@@ -120,7 +126,8 @@ func NewGame() (*Game, error) {
 		clearBoardBtn:      RegisterObject(clearBoardBtn),
 		opponentReadyLabel: RegisterObject(opponentReadyLabel),
 
-		opponentBoard: RegisterObject(opponentBoard),
+		opponentBoard:   RegisterObject(opponentBoard),
+		playerTurnLabel: RegisterObject(playerTurnLabel),
 
 		objects: GlobalGameObjects.Objects(),
 	}

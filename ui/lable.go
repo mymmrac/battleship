@@ -15,6 +15,7 @@ const (
 	_ LabelAlignment = iota
 	LabelAlignmentCenter
 	LabelAlignmentTopLeft
+	LabelAlignmentTopCenter
 )
 
 type Label struct {
@@ -50,6 +51,8 @@ func (l *Label) Draw(screen *ebiten.Image) {
 		DrawCenteredText(screen, l.fontFace, l.text, int(l.pos.X), int(l.pos.Y), TextLightColor)
 	case LabelAlignmentTopLeft:
 		DrawTopLeftText(screen, l.fontFace, l.text, int(l.pos.X), int(l.pos.Y), TextLightColor)
+	case LabelAlignmentTopCenter:
+		DrawTopCenterText(screen, l.fontFace, l.text, int(l.pos.X), int(l.pos.Y), TextLightColor)
 	default:
 		panic("unknown alignment: " + strconv.Itoa(int(l.alignment)))
 	}
