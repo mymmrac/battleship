@@ -101,7 +101,7 @@ func NewGame() (*Game, error) {
 	clearBoardBtn := ui.NewButton(core.NewPoint[float32](48+120+32, 570), 120, 40, "Clear", buttonFace)
 	opponentReadyLabel := ui.NewLabel(core.NewPoint[float32](48, 640), "Opponent: not ready", labelFace)
 
-	playerTurnLabel := ui.NewLabel(core.NewPoint[float32](48+400+48/2, 400), "...", labelFace)
+	playerTurnLabel := ui.NewLabel(core.NewPoint[float32](48+400+48/2, 440), "...", labelFace)
 	playerTurnLabel.SetAlignment(ui.LabelAlignmentTopCenter)
 
 	GlobalGameObjects.Acquire()

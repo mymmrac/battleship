@@ -428,10 +428,14 @@ func (g *Game) InitScenes() {
 							sendEvent = NewGameEventSignal(GameEventMiss)
 							g.myBoard.SetAt(coordEvent.Pos, CellMiss)
 						case CellShip:
+							hit = true
+
 							sendEvent = NewGameEventSignal(GameEventHit)
 							g.myBoard.SetAt(coordEvent.Pos, CellShipHit)
-							hit = true
-							// TODO: Send destroyed
+
+							if g.myBoard.FillIfDestroyed(coordEvent.Pos) {
+								sendEvent = NewGameEventSignal(GameEventDestroyed)
+							}
 						}
 
 						go func() {
@@ -449,6 +453,7 @@ func (g *Game) InitScenes() {
 						g.myTurn = true
 					case GameEventDestroyed:
 						g.opponentBoard.SetAt(g.lastShootPos, CellShipHit)
+						_ = g.opponentBoard.FillIfDestroyed(g.lastShootPos)
 						g.myTurn = true
 						// TODO: Mark all empty spots
 					}

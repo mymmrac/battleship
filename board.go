@@ -242,6 +242,55 @@ func (b *Board) placeShip(pos core.Point[int]) {
 	b.cells[y][x] = CellShip
 }
 
+func (b *Board) FillIfDestroyed(pos core.Point[int]) bool {
+	x := pos.X
+	y := pos.Y
+
+	lx := x
+	for dx := x - 1; dx >= 0 && b.At(dx, y) == CellShipHit; dx-- {
+		lx--
+	}
+	if lx > 0 && b.At(lx-1, y) == CellShipHit {
+		return false
+	}
+
+	rx := x
+	for dx := x + 1; dx < cellsCount && b.At(dx, y) == CellShipHit; dx++ {
+		rx++
+	}
+	if rx < cellsCount-1 && b.At(rx+1, y) == CellShipHit {
+		return false
+	}
+
+	ty := y
+	for dy := y - 1; dy >= 0 && b.At(x, dy) == CellShipHit; dy-- {
+		ty--
+	}
+	if ty > 0 && b.At(x, ty-1) == CellShipHit {
+		return false
+	}
+
+	by := y
+	for dy := y + 1; dy < cellsCount && b.At(x, dy) == CellShipHit; dy++ {
+		by++
+	}
+	if by < cellsCount-1 && b.At(x, by+1) == CellShipHit {
+		return false
+	}
+
+	// TODO: Fix this
+
+	for i := ty - 1; i >= 0 && i < cellsCount && i <= by+1; i++ {
+		for j := lx - 1; j >= 0 && j < cellsCount && j <= rx+1; j++ {
+			if b.cells[i][j] != CellShipHit {
+				b.cells[i][j] = CellMiss
+			}
+		}
+	}
+
+	return true
+}
+
 func (b *Board) removeShip(pos core.Point[int]) {
 	if b.cells[pos.Y][pos.X] != CellShip {
 		return
