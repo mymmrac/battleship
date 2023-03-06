@@ -1,9 +1,8 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -84,6 +83,7 @@ func (e *EventManagerServer) Events(stream api.EventManager_EventsServer) error 
 		}
 
 		event := ServerEventFromGRPC(grpcEvent)
+		fmt.Printf("Event: %d, from %s, data: %v\n", event.Type, event.From, event.Data)
 
 		switch event.Type {
 		case ServerEventNewGame:
@@ -96,8 +96,6 @@ func (e *EventManagerServer) Events(stream api.EventManager_EventsServer) error 
 			}
 			go player.HandleEvents(stream)
 		case ServerEventListGames:
-			buf := &bytes.Buffer{}
-
 			games := make([]uuid.UUID, 0, len(e.games))
 			for id, g := range e.games {
 				if id == g.playerA.ID {
@@ -105,7 +103,8 @@ func (e *EventManagerServer) Events(stream api.EventManager_EventsServer) error 
 				}
 			}
 
-			err = binary.Write(buf, binary.BigEndian, games)
+			var data []byte
+			data, err = json.Marshal(games)
 			if err != nil {
 				return err
 			}
@@ -113,7 +112,7 @@ func (e *EventManagerServer) Events(stream api.EventManager_EventsServer) error 
 			err = stream.Send(ServerEvent{
 				Type: ServerEventListGames,
 				From: uuid.Nil,
-				Data: buf.Bytes(),
+				Data: data,
 			}.ToGRPC())
 			if err != nil {
 				return err
@@ -191,10 +190,17 @@ func (c *EventManagerClient) ListGames() ([]uuid.UUID, error) {
 	}
 
 	var games []uuid.UUID
-	err = binary.Read(bytes.NewReader(event.Data), binary.BigEndian, &games)
-	if err != nil {
+	if err = json.Unmarshal(event.Data, &games); err != nil {
 		return nil, err
 	}
 
 	return games, nil
+}
+
+func (c *EventManagerClient) JoinGame(gameID uuid.UUID) error {
+	return c.stream.Send(ServerEvent{
+		Type: ServerEventJoinGame,
+		From: c.playerID,
+		Data: gameID[:],
+	}.ToGRPC())
 }

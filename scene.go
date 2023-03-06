@@ -6,6 +6,10 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/mymmrac/battleship/api"
 )
 
 type SceneID int
@@ -76,7 +80,22 @@ func (g *Game) InitScenes() {
 		sceneNewGame: {
 			OnEnter: func() {
 				go func() {
-					err := g.connector.StartNewGame()
+					var err error
+					// TODO: Close connection
+					g.grpcConn, err = grpc.Dial(grpcAddr+":"+grpcPort, grpc.WithTransportCredentials(insecure.NewCredentials()))
+					if err != nil {
+						g.events <- NewEventError(EventNewGameStartFailed, err)
+						return
+					}
+
+					client := api.NewEventManagerClient(g.grpcConn)
+					g.eventManager, err = NewEventManagerClient(client)
+					if err != nil {
+						g.events <- NewEventError(EventNewGameStartFailed, err)
+						return
+					}
+
+					err = g.eventManager.NewGame()
 					if err != nil {
 						g.events <- NewEventError(EventNewGameStartFailed, err)
 						return
@@ -86,30 +105,22 @@ func (g *Game) InitScenes() {
 				}()
 			},
 			OnUpdate: func() {
-				event, ok := <-g.events
-				if !ok {
+				var event Event
+				select {
+				case event = <-g.events:
+				// Pass
+				default:
 					return
 				}
 
 				switch event.EventType() {
 				case EventNewGameStarted:
-					go func() {
-						err := g.connector.WaitForConnection()
-						if err != nil {
-							g.events <- NewEventError(EventJoinGameFailed, err)
-							return
-						}
-
-						g.events <- NewEventSignal(EventJoinedGame)
-					}()
+					fmt.Println("NEW GAME")
 
 					// TODO: Make separate scene
-					// g.ChangeScene(scenePlaceShips)
+					// g.ChangeScene(sceneWaitForPlayer)
 					// return
 
-				case EventJoinedGame:
-					g.ChangeScene(scenePlaceShips)
-					return
 				case EventNewGameStartFailed:
 					errEvent := event.(EventError)
 					fmt.Println(errEvent.err) // TODO: Fix me
@@ -125,7 +136,28 @@ func (g *Game) InitScenes() {
 		sceneJoinGame: {
 			OnEnter: func() {
 				go func() {
-					err := g.connector.JoinGame()
+					var err error
+					// TODO: Close connection
+					g.grpcConn, err = grpc.Dial(grpcAddr+":"+grpcPort, grpc.WithTransportCredentials(insecure.NewCredentials()))
+					if err != nil {
+						g.events <- NewEventError(EventJoinGameFailed, err)
+						return
+					}
+
+					client := api.NewEventManagerClient(g.grpcConn)
+					g.eventManager, err = NewEventManagerClient(client)
+					if err != nil {
+						g.events <- NewEventError(EventJoinGameFailed, err)
+						return
+					}
+
+					games, err := g.eventManager.ListGames()
+					if err != nil {
+						g.events <- NewEventError(EventJoinGameFailed, err)
+						return
+					}
+
+					err = g.eventManager.JoinGame(games[0])
 					if err != nil {
 						g.events <- NewEventError(EventJoinGameFailed, err)
 						return
@@ -135,8 +167,11 @@ func (g *Game) InitScenes() {
 				}()
 			},
 			OnUpdate: func() {
-				event, ok := <-g.events
-				if !ok {
+				var event Event
+				select {
+				case event = <-g.events:
+				// Pass
+				default:
 					return
 				}
 

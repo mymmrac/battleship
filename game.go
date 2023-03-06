@@ -9,6 +9,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
+	"google.golang.org/grpc"
 )
 
 const (
@@ -19,6 +20,9 @@ const (
 type Game struct {
 	debug bool
 	exit  bool
+
+	grpcConn     *grpc.ClientConn
+	eventManager *EventManagerClient
 
 	connector BattleshipConnector
 	events    chan Event
