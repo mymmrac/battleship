@@ -21,9 +21,9 @@ var allowedShips = []int{
 }
 
 // var allowedShips = []int{ // TODO: Remove
-// 	2, // 1
-// 	0, // 2
-// 	0, // 3
+// 	1, // 1
+// 	1, // 2
+// 	1, // 3
 // 	0, // 4
 // 	0, // 5
 // }

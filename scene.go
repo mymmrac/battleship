@@ -500,7 +500,9 @@ func (g *Game) InitScenes() {
 				}
 				g.theEndLabel.Show()
 				g.myBoard.Show()
+				g.myBoard.Disable()
 				g.opponentBoard.Show()
+				g.opponentBoard.Disable()
 			},
 			OnUpdate: func() {},
 			OnLeave: func() {

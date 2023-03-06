@@ -254,7 +254,7 @@ func (b *Board) FillIfDestroyed(pos core.Point[int]) bool {
 	for dx := x - 1; dx >= 0 && b.At(dx, y) == CellShipHit; dx-- {
 		lx--
 	}
-	if lx > 0 && b.At(lx-1, y) == CellShipHit {
+	if lx > 0 && b.At(lx-1, y) == CellShip {
 		return false
 	}
 
@@ -262,7 +262,7 @@ func (b *Board) FillIfDestroyed(pos core.Point[int]) bool {
 	for dx := x + 1; dx < cellsCount && b.At(dx, y) == CellShipHit; dx++ {
 		rx++
 	}
-	if rx < cellsCount-1 && b.At(rx+1, y) == CellShipHit {
+	if rx < cellsCount-1 && b.At(rx+1, y) == CellShip {
 		return false
 	}
 
@@ -270,7 +270,7 @@ func (b *Board) FillIfDestroyed(pos core.Point[int]) bool {
 	for dy := y - 1; dy >= 0 && b.At(x, dy) == CellShipHit; dy-- {
 		ty--
 	}
-	if ty > 0 && b.At(x, ty-1) == CellShipHit {
+	if ty > 0 && b.At(x, ty-1) == CellShip {
 		return false
 	}
 
@@ -278,7 +278,7 @@ func (b *Board) FillIfDestroyed(pos core.Point[int]) bool {
 	for dy := y + 1; dy < cellsCount && b.At(x, dy) == CellShipHit; dy++ {
 		by++
 	}
-	if by < cellsCount-1 && b.At(x, by+1) == CellShipHit {
+	if by < cellsCount-1 && b.At(x, by+1) == CellShip {
 		return false
 	}
 
@@ -292,7 +292,7 @@ func (b *Board) FillIfDestroyed(pos core.Point[int]) bool {
 				continue
 			}
 
-			if b.cells[i][j] != CellShipHit {
+			if b.cells[i][j] == CellEmpty {
 				b.cells[i][j] = CellMiss
 			}
 		}
