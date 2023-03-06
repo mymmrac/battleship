@@ -17,6 +17,7 @@ const (
 	GameEventMiss
 	GameEventHit
 	GameEventDestroyed
+	GameEventGameEnded
 )
 
 type GameEvent interface {

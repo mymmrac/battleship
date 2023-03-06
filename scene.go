@@ -24,6 +24,7 @@ const (
 	ScenePlaceShips
 	ScenePlayerReady
 	SceneTheGame
+	SceneTheEnd
 )
 
 type Scene struct {
@@ -446,6 +447,18 @@ func (g *Game) InitScenes() {
 						}()
 
 						g.myTurn = !hit
+
+						if !g.myBoard.HasAlive() {
+							go func() {
+								if err := g.eventManager.SendGameEvent(NewGameEventSignal(GameEventGameEnded)); err != nil {
+									fmt.Println(err) // TODO: Fix
+									return
+								}
+							}()
+
+							g.ChangeScene(SceneTheEnd)
+							return
+						}
 					case GameEventMiss:
 						g.opponentBoard.SetAt(g.lastShootPos, CellMiss)
 					case GameEventHit:
@@ -455,6 +468,9 @@ func (g *Game) InitScenes() {
 						g.opponentBoard.SetAt(g.lastShootPos, CellShipHit)
 						_ = g.opponentBoard.FillIfDestroyed(g.lastShootPos)
 						g.myTurn = true
+					case GameEventGameEnded:
+						g.ChangeScene(SceneTheEnd)
+						return
 					}
 				default:
 					panic("unexpected event type: " + strconv.Itoa(int(event.EventType())))
@@ -470,6 +486,25 @@ func (g *Game) InitScenes() {
 				g.myBoard.DisableAndHide()
 				g.opponentBoard.DisableAndHide()
 				g.playerTurnLabel.Hide()
+			},
+		},
+
+		SceneTheEnd: {
+			OnEnter: func() {
+				if g.myBoard.HasAlive() {
+					g.theEndLabel.SetText("You Won!")
+				} else {
+					g.theEndLabel.SetText("You Lose!")
+				}
+				g.theEndLabel.Show()
+				g.myBoard.Show()
+				g.opponentBoard.Show()
+			},
+			OnUpdate: func() {},
+			OnLeave: func() {
+				g.theEndLabel.Hide()
+				g.myBoard.Hide()
+				g.opponentBoard.Hide()
 			},
 		},
 	}

@@ -325,3 +325,15 @@ func (b *Board) highlightCell(screen *ebiten.Image, boardPos core.Point[int]) {
 func (b *Board) SetAt(pos core.Point[int], kind CellKind) {
 	b.cells[pos.Y][pos.X] = kind
 }
+
+func (b *Board) HasAlive() bool {
+	for y := 0; y < cellsCount; y++ {
+		for x := 0; x < cellsCount; x++ {
+			if b.At(x, y) == CellShip {
+				return true
+			}
+		}
+	}
+
+	return false
+}
