@@ -12,7 +12,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"google.golang.org/grpc"
 
-	"github.com/mymmrac/battleship/core"
+	"github.com/mymmrac/battleship/data"
+	"github.com/mymmrac/battleship/events"
 	"github.com/mymmrac/battleship/ui"
 )
 
@@ -31,7 +32,7 @@ type Game struct {
 	grpcConn     *grpc.ClientConn
 	eventManager *EventManagerClient
 
-	events chan GameEvent
+	events chan events.GameEvent
 
 	currentScene *Scene
 	scenes       map[SceneID]*Scene
@@ -53,7 +54,7 @@ type Game struct {
 	opponentReadyLabel *ui.Label
 
 	myTurn          bool
-	lastShootPos    core.Point[int]
+	lastShootPos    data.Point[int]
 	playerTurnLabel *ui.Label
 	opponentBoard   *Board
 
@@ -101,30 +102,30 @@ func NewGame(serverAddr, serverPort string) (*Game, error) {
 		return nil, err
 	}
 
-	newGameBtn := ui.NewButton(core.NewPoint[float32](48, 48), 200, 40, "New Game", buttonFace)
-	joinGameBtn := ui.NewButton(core.NewPoint[float32](48, 48+40+32), 200, 40, "Join Game", buttonFace)
-	exitBtn := ui.NewButton(core.NewPoint[float32](48, 48+40*2+32*2), 200, 40, "Exit", buttonFace)
+	newGameBtn := ui.NewButton(data.NewPoint[float32](48, 48), 200, 40, "New Game", buttonFace)
+	joinGameBtn := ui.NewButton(data.NewPoint[float32](48, 48+40+32), 200, 40, "Join Game", buttonFace)
+	exitBtn := ui.NewButton(data.NewPoint[float32](48, 48+40*2+32*2), 200, 40, "Exit", buttonFace)
 
-	newGameLoadingLabel := ui.NewLabel(core.NewPoint[float32](48, 48), "", labelFace)
+	newGameLoadingLabel := ui.NewLabel(data.NewPoint[float32](48, 48), "", labelFace)
 
 	boardFace, err := loadFace(JetBrainsMonoFont, float64(cellSize)*0.6)
 	if err != nil {
 		return nil, err
 	}
 
-	myBoard := NewBoard(core.NewPoint[float32](48, 48), boardFace)
-	myShipyard := NewShipyard(core.NewPoint[float32](48, 440), myBoard, boardFace)
-	opponentBoard := NewBoard(core.NewPoint[float32](48+400, 48), boardFace)
+	myBoard := NewBoard(data.NewPoint[float32](48, 48), boardFace)
+	myShipyard := NewShipyard(data.NewPoint[float32](48, 440), myBoard, boardFace)
+	opponentBoard := NewBoard(data.NewPoint[float32](48+400, 48), boardFace)
 
-	readyBtn := ui.NewButton(core.NewPoint[float32](48, 570), 120, 40, "Ready", buttonFace)
-	notReadyBtn := ui.NewButton(core.NewPoint[float32](48, 570), 160, 40, "Not Ready", buttonFace)
-	clearBoardBtn := ui.NewButton(core.NewPoint[float32](48+120+32, 570), 120, 40, "Clear", buttonFace)
-	opponentReadyLabel := ui.NewLabel(core.NewPoint[float32](48, 640), "Opponent: not ready", labelFace)
+	readyBtn := ui.NewButton(data.NewPoint[float32](48, 570), 120, 40, "Ready", buttonFace)
+	notReadyBtn := ui.NewButton(data.NewPoint[float32](48, 570), 160, 40, "Not Ready", buttonFace)
+	clearBoardBtn := ui.NewButton(data.NewPoint[float32](48+120+32, 570), 120, 40, "Clear", buttonFace)
+	opponentReadyLabel := ui.NewLabel(data.NewPoint[float32](48, 640), "Opponent: not ready", labelFace)
 
-	playerTurnLabel := ui.NewLabel(core.NewPoint[float32](48+400+48/2, 440), "", labelFace)
+	playerTurnLabel := ui.NewLabel(data.NewPoint[float32](48+400+48/2, 440), "", labelFace)
 	playerTurnLabel.SetAlignment(ui.LabelAlignmentTopCenter)
 
-	theEndLabel := ui.NewLabel(core.NewPoint[float32](48+400+48/2, 440), "", labelFace)
+	theEndLabel := ui.NewLabel(data.NewPoint[float32](48+400+48/2, 440), "", labelFace)
 	theEndLabel.SetAlignment(ui.LabelAlignmentTopCenter)
 
 	GlobalGameObjects.Acquire()
@@ -136,7 +137,7 @@ func NewGame(serverAddr, serverPort string) (*Game, error) {
 		serverAddr: serverAddr,
 		serverPort: serverPort,
 
-		events: make(chan GameEvent),
+		events: make(chan events.GameEvent),
 
 		newGameBtn:  RegisterObject(newGameBtn),
 		joinGameBtn: RegisterObject(joinGameBtn),
@@ -181,7 +182,7 @@ func (g *Game) Update() error {
 	}
 
 	cx, cy := ebiten.CursorPosition()
-	cp := core.NewPoint(float32(cx), float32(cy))
+	cp := data.NewPoint(float32(cx), float32(cy))
 
 	cursorPointer := false
 

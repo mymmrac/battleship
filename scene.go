@@ -11,7 +11,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/mymmrac/battleship/api"
+	"github.com/mymmrac/battleship/events"
+	"github.com/mymmrac/battleship/server/api"
 )
 
 type SceneID int
@@ -92,25 +93,25 @@ func (g *Game) InitScenes() {
 					g.grpcConn, err = grpc.Dial(g.serverAddr+":"+g.serverPort,
 						grpc.WithTransportCredentials(insecure.NewCredentials()))
 					if err != nil {
-						g.events <- NewGameEventError(GameEventNewGameStartFailed, err)
+						g.events <- events.NewGameEventError(events.GameEventNewGameStartFailed, err)
 						return
 					}
 
 					client := api.NewEventManagerClient(g.grpcConn)
 					g.eventManager, err = NewEventManagerClient(client)
 					if err != nil {
-						g.events <- NewGameEventError(GameEventNewGameStartFailed, err)
+						g.events <- events.NewGameEventError(events.GameEventNewGameStartFailed, err)
 						return
 					}
 
 					err = g.eventManager.NewGame()
 					if err != nil {
-						g.events <- NewGameEventError(GameEventNewGameStartFailed, err)
+						g.events <- events.NewGameEventError(events.GameEventNewGameStartFailed, err)
 						return
 					}
 
 					time.Sleep(time.Second)
-					g.events <- NewGameEventSignal(GameEventNewGameStarted)
+					g.events <- events.NewGameEventSignal(events.GameEventNewGameStarted)
 
 					// TODO: Move to separate place
 					err = g.eventManager.HandleGameEvents(g.events)
@@ -120,7 +121,7 @@ func (g *Game) InitScenes() {
 				}()
 			},
 			OnUpdate: func() {
-				var event GameEvent
+				var event events.GameEvent
 				select {
 				case event = <-g.events:
 				// Pass
@@ -129,28 +130,28 @@ func (g *Game) InitScenes() {
 				}
 
 				switch event.EventType() {
-				case GameEventNewGameStarted:
+				case events.GameEventNewGameStarted:
 					g.newGameLoadingLabel.SetText("Waiting for other player to join...")
 
 					// TODO: Make separate scene
 					// g.ChangeScene(sceneWaitForPlayer)
 					// return
-				case GameEventFromServer:
-					serverEvent := event.(ServerEvent)
+				case events.GameEventFromServer:
+					serverEvent := event.(events.ServerEvent)
 
-					var signalEvent GameEventSignal
+					var signalEvent events.GameEventSignal
 					err := json.Unmarshal(serverEvent.Data, &signalEvent)
 					if err != nil {
 						fmt.Println(err) // TODO: Fix me
 						return
 					}
 
-					if signalEvent.Type == GameEventJoinedGame {
+					if signalEvent.Type == events.GameEventJoinedGame {
 						g.ChangeScene(ScenePlaceShips)
 						return
 					}
-				case GameEventNewGameStartFailed:
-					errEvent := event.(GameEventError)
+				case events.GameEventNewGameStartFailed:
+					errEvent := event.(events.GameEventError)
 					fmt.Println(errEvent.Err) // TODO: Fix me
 					g.ChangeScene(SceneMenu)
 					return
@@ -171,30 +172,30 @@ func (g *Game) InitScenes() {
 					g.grpcConn, err = grpc.Dial(g.serverAddr+":"+g.serverPort,
 						grpc.WithTransportCredentials(insecure.NewCredentials()))
 					if err != nil {
-						g.events <- NewGameEventError(GameEventJoinGameFailed, err)
+						g.events <- events.NewGameEventError(events.GameEventJoinGameFailed, err)
 						return
 					}
 
 					client := api.NewEventManagerClient(g.grpcConn)
 					g.eventManager, err = NewEventManagerClient(client)
 					if err != nil {
-						g.events <- NewGameEventError(GameEventJoinGameFailed, err)
+						g.events <- events.NewGameEventError(events.GameEventJoinGameFailed, err)
 						return
 					}
 
 					games, err := g.eventManager.ListGames()
 					if err != nil {
-						g.events <- NewGameEventError(GameEventJoinGameFailed, err)
+						g.events <- events.NewGameEventError(events.GameEventJoinGameFailed, err)
 						return
 					}
 
 					err = g.eventManager.JoinGame(games[0])
 					if err != nil {
-						g.events <- NewGameEventError(GameEventJoinGameFailed, err)
+						g.events <- events.NewGameEventError(events.GameEventJoinGameFailed, err)
 						return
 					}
 
-					g.events <- NewGameEventSignal(GameEventJoinedGame)
+					g.events <- events.NewGameEventSignal(events.GameEventJoinedGame)
 
 					// TODO: Move to separate place
 					err = g.eventManager.HandleGameEvents(g.events)
@@ -204,7 +205,7 @@ func (g *Game) InitScenes() {
 				}()
 			},
 			OnUpdate: func() {
-				var event GameEvent
+				var event events.GameEvent
 				select {
 				case event = <-g.events:
 				// Pass
@@ -213,11 +214,11 @@ func (g *Game) InitScenes() {
 				}
 
 				switch event.EventType() {
-				case GameEventJoinedGame:
+				case events.GameEventJoinedGame:
 					g.ChangeScene(ScenePlaceShips)
 					return
-				case GameEventJoinGameFailed:
-					errEvent := event.(GameEventError)
+				case events.GameEventJoinGameFailed:
+					errEvent := event.(events.GameEventError)
 					fmt.Println(errEvent.Err) // TODO: Fix me
 					g.ChangeScene(SceneMenu)
 					return
@@ -260,7 +261,7 @@ func (g *Game) InitScenes() {
 					return
 				}
 
-				var event GameEvent
+				var event events.GameEvent
 				select {
 				case event = <-g.events:
 				// Pass
@@ -269,21 +270,21 @@ func (g *Game) InitScenes() {
 				}
 
 				switch event.EventType() {
-				case GameEventFromServer:
-					serverEvent := event.(ServerEvent)
+				case events.GameEventFromServer:
+					serverEvent := event.(events.ServerEvent)
 
-					var signalEvent GameEventSignal
+					var signalEvent events.GameEventSignal
 					err := json.Unmarshal(serverEvent.Data, &signalEvent)
 					if err != nil {
 						fmt.Println(err) // TODO: Fix me
 						return
 					}
 
-					if signalEvent.Type == GameEventPlayerReady {
+					if signalEvent.Type == events.GameEventPlayerReady {
 						g.opponentReady = true
 						g.opponentReadyLabel.SetText("Opponent: ready")
 						return
-					} else if signalEvent.Type == GameEventPlayerNotReady {
+					} else if signalEvent.Type == events.GameEventPlayerNotReady {
 						g.opponentReady = false
 						g.opponentReadyLabel.SetText("Opponent: not ready")
 						return
@@ -304,7 +305,7 @@ func (g *Game) InitScenes() {
 		ScenePlayerReady: {
 			OnEnter: func() {
 				go func() {
-					err := g.eventManager.SendGameEvent(NewGameEventSignal(GameEventPlayerReady))
+					err := g.eventManager.SendGameEvent(events.NewGameEventSignal(events.GameEventPlayerReady))
 					if err != nil {
 						fmt.Println(err) // TODO: Fix me
 						return
@@ -327,7 +328,7 @@ func (g *Game) InitScenes() {
 					g.ChangeScene(ScenePlaceShips)
 				}
 
-				var event GameEvent
+				var event events.GameEvent
 				select {
 				case event = <-g.events:
 				// Pass
@@ -336,17 +337,17 @@ func (g *Game) InitScenes() {
 				}
 
 				switch event.EventType() {
-				case GameEventFromServer:
-					serverEvent := event.(ServerEvent)
+				case events.GameEventFromServer:
+					serverEvent := event.(events.ServerEvent)
 
-					var signalEvent GameEventSignal
+					var signalEvent events.GameEventSignal
 					err := json.Unmarshal(serverEvent.Data, &signalEvent)
 					if err != nil {
 						fmt.Println(err) // TODO: Fix me
 						return
 					}
 
-					if signalEvent.Type == GameEventPlayerReady {
+					if signalEvent.Type == events.GameEventPlayerReady {
 						g.opponentReady = true
 						g.myTurn = true
 						g.playerTurnLabel.SetText("Your Turn")
@@ -367,7 +368,7 @@ func (g *Game) InitScenes() {
 						return
 					}
 
-					err := g.eventManager.SendGameEvent(NewGameEventSignal(GameEventPlayerNotReady))
+					err := g.eventManager.SendGameEvent(events.NewGameEventSignal(events.GameEventPlayerNotReady))
 					if err != nil {
 						fmt.Println(err) // TODO: Fix me
 						return
@@ -386,7 +387,7 @@ func (g *Game) InitScenes() {
 				pos := g.opponentBoard.hoverPos
 				if g.myTurn && g.opponentBoard.hover && g.opponentBoard.canShoot(pos) &&
 					inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-					err := g.eventManager.SendGameEvent(NewGameEventCoord(pos))
+					err := g.eventManager.SendGameEvent(events.NewGameEventCoord(pos))
 					if err != nil {
 						fmt.Println(err) // TODO: Fix me
 						return
@@ -397,7 +398,7 @@ func (g *Game) InitScenes() {
 					g.lastShootPos = pos
 				}
 
-				var event GameEvent
+				var event events.GameEvent
 				select {
 				case event = <-g.events:
 				// Pass
@@ -406,18 +407,18 @@ func (g *Game) InitScenes() {
 				}
 
 				switch event.EventType() {
-				case GameEventFromServer:
-					serverEvent := event.(ServerEvent)
+				case events.GameEventFromServer:
+					serverEvent := event.(events.ServerEvent)
 
-					var signalEvent GameEventSignal
+					var signalEvent events.GameEventSignal
 					if err := json.Unmarshal(serverEvent.Data, &signalEvent); err != nil {
 						fmt.Println(err) // TODO: Fix me
 						return
 					}
 
 					switch signalEvent.EventType() {
-					case GameEventShoot:
-						var coordEvent GameEventCoord
+					case events.GameEventShoot:
+						var coordEvent events.GameEventCoord
 						if err := json.Unmarshal(serverEvent.Data, &coordEvent); err != nil {
 							fmt.Println(err) // TODO: Fix me
 							return
@@ -425,19 +426,19 @@ func (g *Game) InitScenes() {
 
 						hit := false
 
-						var sendEvent GameEvent
+						var sendEvent events.GameEvent
 						switch g.myBoard.AtPos(coordEvent.Pos) {
 						case CellEmpty:
-							sendEvent = NewGameEventSignal(GameEventMiss)
+							sendEvent = events.NewGameEventSignal(events.GameEventMiss)
 							g.myBoard.SetAt(coordEvent.Pos, CellMiss)
 						case CellShip:
 							hit = true
 
-							sendEvent = NewGameEventSignal(GameEventHit)
+							sendEvent = events.NewGameEventSignal(events.GameEventHit)
 							g.myBoard.SetAt(coordEvent.Pos, CellShipHit)
 
 							if g.myBoard.FillIfDestroyed(coordEvent.Pos) {
-								sendEvent = NewGameEventSignal(GameEventDestroyed)
+								sendEvent = events.NewGameEventSignal(events.GameEventDestroyed)
 							}
 						}
 
@@ -452,7 +453,7 @@ func (g *Game) InitScenes() {
 
 						if !g.myBoard.HasAlive() {
 							go func() {
-								if err := g.eventManager.SendGameEvent(NewGameEventSignal(GameEventGameEnded)); err != nil {
+								if err := g.eventManager.SendGameEvent(events.NewGameEventSignal(events.GameEventGameEnded)); err != nil {
 									fmt.Println(err) // TODO: Fix
 									return
 								}
@@ -461,16 +462,16 @@ func (g *Game) InitScenes() {
 							g.ChangeScene(SceneTheEnd)
 							return
 						}
-					case GameEventMiss:
+					case events.GameEventMiss:
 						g.opponentBoard.SetAt(g.lastShootPos, CellMiss)
-					case GameEventHit:
+					case events.GameEventHit:
 						g.opponentBoard.SetAt(g.lastShootPos, CellShipHit)
 						g.myTurn = true
-					case GameEventDestroyed:
+					case events.GameEventDestroyed:
 						g.opponentBoard.SetAt(g.lastShootPos, CellShipHit)
 						_ = g.opponentBoard.FillIfDestroyed(g.lastShootPos)
 						g.myTurn = true
-					case GameEventGameEnded:
+					case events.GameEventGameEnded:
 						g.ChangeScene(SceneTheEnd)
 						return
 					}

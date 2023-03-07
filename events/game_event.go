@@ -1,6 +1,6 @@
-package main
+package events
 
-import "github.com/mymmrac/battleship/core"
+import "github.com/mymmrac/battleship/data"
 
 type GameEventType int
 
@@ -56,10 +56,10 @@ func (e GameEventSignal) EventType() GameEventType {
 
 type GameEventCoord struct {
 	Type GameEventType
-	Pos  core.Point[int]
+	Pos  data.Point[int]
 }
 
-func NewGameEventCoord(pos core.Point[int]) GameEventCoord {
+func NewGameEventCoord(pos data.Point[int]) GameEventCoord {
 	return GameEventCoord{
 		Type: GameEventShoot,
 		Pos:  pos,

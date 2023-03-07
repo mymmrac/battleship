@@ -7,6 +7,7 @@ import (
 	"golang.org/x/image/font"
 
 	"github.com/mymmrac/battleship/core"
+	"github.com/mymmrac/battleship/data"
 )
 
 type LabelAlignment int
@@ -21,13 +22,13 @@ const (
 type Label struct {
 	core.BaseGameObject
 
-	pos       core.Point[float32]
+	pos       data.Point[float32]
 	text      string
 	fontFace  font.Face
 	alignment LabelAlignment
 }
 
-func NewLabel(pos core.Point[float32], text string, fontFace font.Face) *Label {
+func NewLabel(pos data.Point[float32], text string, fontFace font.Face) *Label {
 	return &Label{
 		BaseGameObject: core.NewBaseGameObject(),
 		pos:            pos,

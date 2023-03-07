@@ -5,13 +5,13 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 
-	"github.com/mymmrac/battleship/core"
+	"github.com/mymmrac/battleship/data"
 )
 
 type GameObject interface {
 	Active() bool
 	CursorPointer() bool
-	Update(cp core.Point[float32])
+	Update(cp data.Point[float32])
 	Visible() bool
 	Draw(screen *ebiten.Image)
 }

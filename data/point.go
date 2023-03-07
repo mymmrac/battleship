@@ -1,15 +1,15 @@
-package core
+package data
 
-type numeric interface {
+type Numeric interface {
 	int | float32
 }
 
-type Point[T numeric] struct {
+type Point[T Numeric] struct {
 	X T
 	Y T
 }
 
-func NewPoint[T numeric](x, y T) Point[T] {
+func NewPoint[T Numeric](x, y T) Point[T] {
 	return Point[T]{
 		X: x,
 		Y: y,

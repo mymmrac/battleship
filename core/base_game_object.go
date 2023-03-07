@@ -1,6 +1,10 @@
 package core
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"github.com/hajimehoshi/ebiten/v2"
+
+	"github.com/mymmrac/battleship/data"
+)
 
 type BaseGameObject struct {
 	active  bool
@@ -14,7 +18,7 @@ func NewBaseGameObject() BaseGameObject {
 	}
 }
 
-func (o *BaseGameObject) Update(_ Point[float32]) {}
+func (o *BaseGameObject) Update(_ data.Point[float32]) {}
 
 func (o *BaseGameObject) Draw(_ *ebiten.Image) {}
 

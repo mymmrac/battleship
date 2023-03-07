@@ -9,6 +9,7 @@ import (
 	"golang.org/x/image/font"
 
 	"github.com/mymmrac/battleship/core"
+	"github.com/mymmrac/battleship/data"
 	"github.com/mymmrac/battleship/ui"
 )
 
@@ -29,15 +30,15 @@ const (
 type Board struct {
 	core.BaseGameObject
 
-	pos      core.Point[float32]
+	pos      data.Point[float32]
 	cells    [cellsCount][cellsCount]CellKind
 	fontFace font.Face
 
 	hover    bool
-	hoverPos core.Point[int]
+	hoverPos data.Point[int]
 }
 
-func NewBoard(pos core.Point[float32], fontFace font.Face) *Board {
+func NewBoard(pos data.Point[float32], fontFace font.Face) *Board {
 	return &Board{
 		BaseGameObject: core.NewBaseGameObject(),
 		pos:            pos,
@@ -46,7 +47,7 @@ func NewBoard(pos core.Point[float32], fontFace font.Face) *Board {
 	}
 }
 
-func (b *Board) Update(cp core.Point[float32]) {
+func (b *Board) Update(cp data.Point[float32]) {
 	b.hoverPos.X, b.hoverPos.Y, b.hover = b.cellOn(cp)
 }
 
@@ -152,26 +153,26 @@ func (b *Board) Draw(screen *ebiten.Image) {
 	}
 }
 
-func (b *Board) innerCellPos(x, y int) core.Point[float32] {
-	return core.NewPoint(
+func (b *Board) innerCellPos(x, y int) data.Point[float32] {
+	return data.NewPoint(
 		b.pos.X+float32(x)*cellSize+cellPaddingSize/2,
 		b.pos.Y+float32(y)*cellSize+cellPaddingSize/2,
 	)
 }
 
-func (b *Board) cellPos(x, y int) core.Point[float32] {
-	return core.NewPoint(
+func (b *Board) cellPos(x, y int) data.Point[float32] {
+	return data.NewPoint(
 		b.pos.X+float32(x)*cellSize,
 		b.pos.Y+float32(y)*cellSize,
 	)
 }
 
-func (b *Board) cellOn(p core.Point[float32]) (int, int, bool) {
-	p = p.Sub(b.pos.Add(core.NewPoint(cellSize, cellSize)))
+func (b *Board) cellOn(p data.Point[float32]) (int, int, bool) {
+	p = p.Sub(b.pos.Add(data.NewPoint(cellSize, cellSize)))
 
 	for y := 0; y < cellsCount; y++ {
 		for x := 0; x < cellsCount; x++ {
-			cp := core.NewPoint(float32(x)*cellSize, float32(y)*cellSize)
+			cp := data.NewPoint(float32(x)*cellSize, float32(y)*cellSize)
 			if cp.X <= p.X && p.X <= cp.X+cellSize &&
 				cp.Y <= p.Y && p.Y <= cp.Y+cellSize {
 				return x, y, true
@@ -182,11 +183,11 @@ func (b *Board) cellOn(p core.Point[float32]) (int, int, bool) {
 	return -1, -1, false
 }
 
-func (b *Board) canShoot(pos core.Point[int]) bool {
+func (b *Board) canShoot(pos data.Point[int]) bool {
 	return b.cells[pos.Y][pos.X] == CellEmpty
 }
 
-func (b *Board) placeShip(pos core.Point[int]) {
+func (b *Board) placeShip(pos data.Point[int]) {
 	x, y := pos.X, pos.Y
 
 	if b.cells[y][x] != CellEmpty {
@@ -242,7 +243,7 @@ func (b *Board) placeShip(pos core.Point[int]) {
 	b.cells[y][x] = CellShip
 }
 
-func (b *Board) FillIfDestroyed(pos core.Point[int]) bool {
+func (b *Board) FillIfDestroyed(pos data.Point[int]) bool {
 	if b.AtPos(pos) != CellShipHit {
 		return false
 	}
@@ -301,7 +302,7 @@ func (b *Board) FillIfDestroyed(pos core.Point[int]) bool {
 	return true
 }
 
-func (b *Board) removeShip(pos core.Point[int]) {
+func (b *Board) removeShip(pos data.Point[int]) {
 	if b.cells[pos.Y][pos.X] != CellShip {
 		return
 	}
@@ -313,16 +314,16 @@ func (b *Board) At(x, y int) CellKind {
 	return b.cells[y][x]
 }
 
-func (b *Board) AtPos(pos core.Point[int]) CellKind {
+func (b *Board) AtPos(pos data.Point[int]) CellKind {
 	return b.cells[pos.Y][pos.X]
 }
 
-func (b *Board) highlightCell(screen *ebiten.Image, boardPos core.Point[int]) {
+func (b *Board) highlightCell(screen *ebiten.Image, boardPos data.Point[int]) {
 	pos := b.cellPos(boardPos.X+1, boardPos.Y+1)
 	vector.StrokeRect(screen, pos.X, pos.Y, cellSize, cellSize, 4, ui.HighlightColor)
 }
 
-func (b *Board) SetAt(pos core.Point[int], kind CellKind) {
+func (b *Board) SetAt(pos data.Point[int], kind CellKind) {
 	b.cells[pos.Y][pos.X] = kind
 }
 

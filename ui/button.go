@@ -7,6 +7,7 @@ import (
 	"golang.org/x/image/font"
 
 	"github.com/mymmrac/battleship/core"
+	"github.com/mymmrac/battleship/data"
 )
 
 const buttonPadding float32 = 4
@@ -14,7 +15,7 @@ const buttonPadding float32 = 4
 type Button struct {
 	core.BaseGameObject
 
-	pos      core.Point[float32]
+	pos      data.Point[float32]
 	width    float32
 	height   float32
 	text     string
@@ -24,7 +25,7 @@ type Button struct {
 	clicked bool
 }
 
-func NewButton(pos core.Point[float32], width float32, height float32, text string, fontFace font.Face) *Button {
+func NewButton(pos data.Point[float32], width float32, height float32, text string, fontFace font.Face) *Button {
 	return &Button{
 		BaseGameObject: core.NewBaseGameObject(),
 		pos:            pos,
@@ -35,7 +36,7 @@ func NewButton(pos core.Point[float32], width float32, height float32, text stri
 	}
 }
 
-func (b *Button) Update(cp core.Point[float32]) {
+func (b *Button) Update(cp data.Point[float32]) {
 	b.hover = b.pos.X <= cp.X && cp.X <= b.pos.X+b.width &&
 		b.pos.Y <= cp.Y && cp.Y <= b.pos.Y+b.height
 

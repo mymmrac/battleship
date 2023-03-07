@@ -9,6 +9,7 @@ import (
 	"golang.org/x/image/font"
 
 	"github.com/mymmrac/battleship/core"
+	"github.com/mymmrac/battleship/data"
 	"github.com/mymmrac/battleship/ui"
 )
 
@@ -34,13 +35,13 @@ const maxShipyardRowLen = 12 // 24
 type Shipyard struct {
 	core.BaseGameObject
 
-	pos      core.Point[float32]
+	pos      data.Point[float32]
 	board    *Board
 	fontFace font.Face
 	ships    []int
 }
 
-func NewShipyard(pos core.Point[float32], board *Board, fontFace font.Face) *Shipyard {
+func NewShipyard(pos data.Point[float32], board *Board, fontFace font.Face) *Shipyard {
 	return &Shipyard{
 		BaseGameObject: core.NewBaseGameObject(),
 		pos:            pos,
@@ -50,7 +51,7 @@ func NewShipyard(pos core.Point[float32], board *Board, fontFace font.Face) *Shi
 	}
 }
 
-func (s *Shipyard) Update(_ core.Point[float32]) {
+func (s *Shipyard) Update(_ data.Point[float32]) {
 	s.ships = s.shipsCount()
 }
 
@@ -156,15 +157,15 @@ func (s *Shipyard) Draw(screen *ebiten.Image) {
 	}
 }
 
-func (s *Shipyard) innerCellPos(x, y int) core.Point[float32] {
-	return core.NewPoint(
+func (s *Shipyard) innerCellPos(x, y int) data.Point[float32] {
+	return data.NewPoint(
 		s.pos.X+float32(x)*cellSize+cellPaddingSize/2,
 		s.pos.Y+float32(y)*cellSize+cellPaddingSize/2,
 	)
 }
 
-func (s *Shipyard) cellPos(x, y int) core.Point[float32] {
-	return core.NewPoint(
+func (s *Shipyard) cellPos(x, y int) data.Point[float32] {
+	return data.NewPoint(
 		s.pos.X+float32(x)*cellSize,
 		s.pos.Y+float32(y)*cellSize,
 	)
