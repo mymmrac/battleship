@@ -14,11 +14,10 @@ import (
 )
 
 var allowedShips = []int{
-	0, // 1
-	4, // 2
-	3, // 3
-	2, // 4
-	1, // 5
+	4, // 1
+	3, // 2
+	2, // 3
+	1, // 4
 }
 
 // var allowedShips = []int{ // TODO: Remove
