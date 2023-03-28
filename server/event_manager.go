@@ -21,7 +21,7 @@ func (p *Player) HandleEvents(stream api.EventManager_EventsServer) {
 	for event := range p.Events {
 		err := stream.Send(event.ToGRPC())
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println(err) // FIXME
 		}
 	}
 }
